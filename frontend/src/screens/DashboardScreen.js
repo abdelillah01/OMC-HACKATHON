@@ -219,6 +219,19 @@ export default function DashboardScreen({ navigation, route }) {
           </View>
         </TouchableOpacity>
 
+        {/* Nearby Hospitals button */}
+        <TouchableOpacity
+          activeOpacity={0.6}
+          style={styles.tasksBtn}
+          onPress={() => navigation.getParent()?.navigate('Hospitals')}
+        >
+          <Text style={styles.tasksBtnIcon}>🏥</Text>
+          <View>
+            <Text style={styles.tasksBtnTitle}>Nearby Hospitals</Text>
+            <Text style={styles.tasksBtnSub}>Find hospitals around you</Text>
+          </View>
+        </TouchableOpacity>
+
         {/* Active Habits */}
         <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Today's Habits</Text>
         {habits.map((habit) => (
