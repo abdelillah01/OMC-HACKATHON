@@ -21,6 +21,7 @@ import StreakBadge from '../components/StreakBadge';
 import HabitCard from '../components/HabitCard';
 import CelebrationModal from '../components/CelebrationModal';
 import XPPopup from '../components/XPPopup';
+import WeeklyXPChart from '../components/WeeklyXPChart';
 import DailyCheckCard from '../components/DailyCheckCard';
 import DailyCheckModal from '../components/DailyCheckModal';
 import TasksModal from '../components/TasksModal';
@@ -185,6 +186,9 @@ export default function DashboardScreen({ navigation, route }) {
         {/* Avatar + XP */}
         <Avatar stage={profile?.avatarStage || 1} />
         <XPBar xp={profile?.xp || 0} />
+
+        {/* Weekly XP Chart */}
+        <WeeklyXPChart userId={user?.uid} />
 
         {/* Motivational message */}
         <Text style={styles.motivation}>{motivation}</Text>

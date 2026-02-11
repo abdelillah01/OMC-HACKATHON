@@ -1,4 +1,14 @@
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import {
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+  Timestamp,
+} from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { getTodayString } from '../utils/helpers';
 import { DAILY_CHECKS } from '../utils/constants';
@@ -186,4 +196,62 @@ export const submitCheck = async (type, value, userId) => {
   }
 
   return result;
+};
+
+/**
+ * Get XP earned per day for the last 7 days.
+ * Aggregates from dailyChecks (checks + tasks XP) and habitCompletions (habit XP).
+ * Returns [{ date, label, xp }] sorted Mon→Sun.
+ */
+export const getWeeklyXP = async (userId) => {
+  const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  // Build last 7 days
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - i);
+    days.push({
+      date: d.toISOString().split('T')[0],
+      label: DAY_LABELS[d.getDay()],
+      xp: 0,
+    });
+  }
+
+  // 1) Fetch dailyChecks docs for each day (checks + tasks XP)
+  const checkPromises = days.map((day) => {
+    const docId = `${userId}_${day.date}`;
+    return getDoc(doc(db, 'dailyChecks', docId));
+  });
+  const checkSnaps = await Promise.all(checkPromises);
+  checkSnaps.forEach((snap, i) => {
+    if (snap.exists()) {
+      days[i].xp += snap.data().xpEarned || 0;
+    }
+  });
+
+  // 2) Query habitCompletions for the last 7 days
+  const weekAgo = new Date();
+  weekAgo.setHours(0, 0, 0, 0);
+  weekAgo.setDate(weekAgo.getDate() - 6);
+  const startTs = Timestamp.fromDate(weekAgo);
+
+  const q = query(
+    collection(db, 'habitCompletions'),
+    where('userId', '==', userId),
+    where('completedAt', '>=', startTs),
+  );
+  const habitSnap = await getDocs(q);
+  habitSnap.docs.forEach((d) => {
+    const data = d.data();
+    if (!data.completedAt) return;
+    const completedDate = data.completedAt.toDate().toISOString().split('T')[0];
+    const dayEntry = days.find((day) => day.date === completedDate);
+    if (dayEntry) {
+      dayEntry.xp += data.xpAwarded || 0;
+    }
+  });
+
+  return days;
 };
