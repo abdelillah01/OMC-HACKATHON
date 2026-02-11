@@ -25,8 +25,8 @@ import DailyCheckCard from '../components/DailyCheckCard';
 import DailyCheckModal from '../components/DailyCheckModal';
 import TasksModal from '../components/TasksModal';
 
-export default function DashboardScreen({ navigation }) {
-  const { user, logOut } = useAuth();
+export default function DashboardScreen({ navigation, route }) {
+  const { user } = useAuth();
   const { profile } = useUser();
   const [habits, setHabits] = useState([]);
   const [todayCompletions, setTodayCompletions] = useState({});
@@ -44,6 +44,14 @@ export default function DashboardScreen({ navigation }) {
 
   // Tasks modal state
   const [showTasksModal, setShowTasksModal] = useState(false);
+
+  // Open tasks modal when navigated from drawer "Today's Plan"
+  useEffect(() => {
+    if (route.params?.openTasks) {
+      setShowTasksModal(true);
+      navigation.setParams({ openTasks: false });
+    }
+  }, [route.params?.openTasks]);
 
   const loadData = useCallback(async () => {
     if (!user) return;
@@ -156,7 +164,16 @@ export default function DashboardScreen({ navigation }) {
       >
         {/* Header */}
         <View style={styles.header}>
-          <View>
+          <TouchableOpacity
+            activeOpacity={0.6}
+            style={styles.hamburger}
+            onPress={() => navigation.getParent()?.openDrawer()}
+          >
+            <View style={styles.hamburgerLine} />
+            <View style={styles.hamburgerLine} />
+            <View style={styles.hamburgerLine} />
+          </TouchableOpacity>
+          <View style={{ flex: 1 }}>
             <Text style={styles.greeting}>
               Hello, {profile?.name || 'Adventurer'}!
             </Text>
@@ -223,10 +240,6 @@ export default function DashboardScreen({ navigation }) {
           <Text style={styles.historyBtnText}>View Progress</Text>
         </TouchableOpacity>
 
-        {/* Logout */}
-        <TouchableOpacity style={styles.logoutBtn} onPress={logOut}>
-          <Text style={styles.logoutText}>Log Out</Text>
-        </TouchableOpacity>
       </ScrollView>
 
       {/* XP Popup overlay */}
@@ -270,9 +283,22 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
+  },
+  hamburger: {
+    width: 36,
+    height: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  hamburgerLine: {
+    width: 22,
+    height: 2.5,
+    backgroundColor: '#eaeaea',
+    borderRadius: 2,
+    marginVertical: 2.5,
   },
   greeting: {
     fontSize: 22,
@@ -348,14 +374,5 @@ const styles = StyleSheet.create({
     color: '#e94560',
     fontSize: 16,
     fontWeight: '600',
-  },
-  logoutBtn: {
-    marginTop: 12,
-    padding: 14,
-    alignItems: 'center',
-  },
-  logoutText: {
-    color: '#666',
-    fontSize: 14,
   },
 });
