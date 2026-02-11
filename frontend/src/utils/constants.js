@@ -12,7 +12,19 @@ export const XP_PER_LEVEL = 100;
 // Max avatar stage
 export const MAX_AVATAR_STAGE = 4;
 
-// Available interest categories
+// Gender options
+export const GENDERS = ['male', 'female'];
+
+// Predefined goal options (single-select during onboarding)
+export const GOALS = [
+  'nutrition',
+  'hydration',
+  'sleep',
+  'fitness',
+  'mental health',
+];
+
+// Available interest categories (multi-select, max 3)
 export const INTEREST_CATEGORIES = [
   'nutrition',
   'hydration',
@@ -59,6 +71,17 @@ export const MOTIVATIONAL_MESSAGES = [
   "One habit at a time, one day at a time!",
   "Progress, not perfection!",
   "You showed up today — that's what matters!",
+];
+
+// Daily Check types with XP rewards, icons, and questions
+export const DAILY_CHECKS = [
+  { key: 'water', title: 'Water', icon: '💧', xp: 10, question: 'Did you drink enough water today?' },
+  { key: 'movement', title: 'Movement', icon: '🏃', xp: 15, question: 'Did you move your body today?' },
+  { key: 'productivity', title: 'Productivity', icon: '✅', xp: 20, question: 'Were you productive today?' },
+  { key: 'medicine', title: 'Medicine', icon: '💊', xp: 10, question: 'Did you take your medicine today?' },
+  { key: 'sleep', title: 'Sleep', icon: '😴', xp: 10, question: 'Did you get enough sleep?' },
+  { key: 'mood', title: 'Mental State', icon: '🧠', xp: 5, question: 'Are you feeling good mentally?' },
+  { key: 'doctor', title: 'Need a Doctor', icon: '🩺', xp: 0, question: 'Do you need to see a doctor?' },
 ];
 
 // Default user profile values

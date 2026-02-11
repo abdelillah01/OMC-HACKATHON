@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   ScrollView,
@@ -11,69 +10,81 @@ import {
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../context/AuthContext';
-import { INTEREST_CATEGORIES } from '../utils/constants';
 import {
-  getRecommendedHabits,
+  GENDERS,
+  GOALS,
+  INTEREST_CATEGORIES,
+  HABIT_TEMPLATES,
+} from '../utils/constants';
+import {
   activateHabits,
   seedHabitTemplates,
 } from '../services/habitService';
 
-const STEPS = { GOAL: 0, INTERESTS: 1, HABITS: 2 };
+const TOTAL_STEPS = 4;
 
 export default function OnboardingScreen() {
   const { user } = useAuth();
-  const [step, setStep] = useState(STEPS.GOAL);
-  const [healthGoal, setHealthGoal] = useState('');
-  const [selectedInterests, setSelectedInterests] = useState([]);
+  const [step, setStep] = useState(0);
+  const [gender, setGender] = useState(null);
+  const [goal, setGoal] = useState(null);
+  const [interests, setInterests] = useState([]);
   const [selectedHabits, setSelectedHabits] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Compute recommended habits based on selected interests
-  const recommendedHabits = useMemo(
-    () => getRecommendedHabits(selectedInterests),
-    [selectedInterests]
-  );
+  // Step 4: filter habits by selected goal, fallback to all if no match
+  const filteredHabits = useMemo(() => {
+    const matched = HABIT_TEMPLATES.filter((h) => h.category === goal);
+    return matched.length > 0 ? matched : HABIT_TEMPLATES;
+  }, [goal]);
 
   const toggleInterest = (interest) => {
-    setSelectedInterests((prev) =>
-      prev.includes(interest)
-        ? prev.filter((i) => i !== interest)
-        : [...prev, interest]
-    );
+    setInterests((prev) => {
+      if (prev.includes(interest)) return prev.filter((i) => i !== interest);
+      if (prev.length >= 3) return prev; // Max 3
+      return [...prev, interest];
+    });
   };
 
   const toggleHabit = (habit) => {
     setSelectedHabits((prev) => {
       const exists = prev.find((h) => h.id === habit.id);
       if (exists) return prev.filter((h) => h.id !== habit.id);
-      if (prev.length >= 3) return prev; // Max 3
+      if (prev.length >= 3) return prev;
       return [...prev, habit];
     });
   };
 
   const handleNext = () => {
     setError('');
-    if (step === STEPS.GOAL) {
-      if (!healthGoal.trim()) {
-        setError('Please enter your health goal.');
+    if (step === 0) {
+      if (!gender) {
+        setError('Please select your gender.');
         return;
       }
-      setStep(STEPS.INTERESTS);
-    } else if (step === STEPS.INTERESTS) {
-      if (selectedInterests.length === 0) {
+      setStep(1);
+    } else if (step === 1) {
+      if (!goal) {
+        setError('Please select your main goal.');
+        return;
+      }
+      setStep(2);
+    } else if (step === 2) {
+      if (interests.length === 0) {
         setError('Please select at least one interest.');
         return;
       }
-      setSelectedHabits([]); // Reset habit selection when interests change
-      setStep(STEPS.HABITS);
+      setSelectedHabits([]);
+      setStep(3);
     }
   };
 
   const handleBack = () => {
     setError('');
-    if (step === STEPS.INTERESTS) setStep(STEPS.GOAL);
-    else if (step === STEPS.HABITS) setStep(STEPS.INTERESTS);
+    if (step === 1) setStep(0);
+    else if (step === 2) setStep(1);
+    else if (step === 3) setStep(2);
   };
 
   const handleFinish = async () => {
@@ -84,19 +95,17 @@ export default function OnboardingScreen() {
     setError('');
     setLoading(true);
     try {
-      // Seed habit templates if needed
       await seedHabitTemplates();
-
-      // Activate selected habits for user
       await activateHabits(user.uid, selectedHabits);
 
-      // Update user profile
       await updateDoc(doc(db, 'users', user.uid), {
-        healthGoal: healthGoal.trim(),
-        selectedInterests,
+        gender,
+        goal,
+        interests,
+        selectedInterests: interests,
+        healthGoal: goal,
         onboardingComplete: true,
       });
-      // Navigation updates automatically via UserContext onSnapshot
     } catch (err) {
       setError(err.message);
     } finally {
@@ -104,57 +113,72 @@ export default function OnboardingScreen() {
     }
   };
 
-  // ─── Step 1: Health Goal ───
-  if (step === STEPS.GOAL) {
+  const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
+  // ─── Step 1: Gender Selection ───
+  if (step === 0) {
     return (
       <View style={styles.container}>
-        <Text style={styles.stepLabel}>Step 1 of 3</Text>
-        <Text style={styles.title}>What's your health goal?</Text>
-        <Text style={styles.subtitle}>
-          This helps us personalize your journey
-        </Text>
+        <Text style={styles.stepLabel}>Step 1 of {TOTAL_STEPS}</Text>
+        <Text style={styles.title}>Who are you?</Text>
+        <Text style={styles.subtitle}>Select your gender</Text>
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
-        <TextInput
-          style={styles.input}
-          placeholder="e.g. Stay hydrated, sleep better, eat healthier..."
-          placeholderTextColor="#666"
-          value={healthGoal}
-          onChangeText={setHealthGoal}
-          multiline
-        />
+        <View style={styles.genderRow}>
+          {GENDERS.map((g) => {
+            const active = gender === g;
+            return (
+              <TouchableOpacity
+                key={g}
+                style={[styles.genderCard, active && styles.genderCardActive]}
+                onPress={() => setGender(g)}
+              >
+                <Text style={styles.genderEmoji}>
+                  {g === 'male' ? '🧑' : '👩'}
+                </Text>
+                <Text style={[styles.genderLabel, active && styles.genderLabelActive]}>
+                  {capitalize(g)}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
 
-        <TouchableOpacity style={styles.button} onPress={handleNext}>
-          <Text style={styles.buttonText}>Next</Text>
-        </TouchableOpacity>
+        <View style={styles.navRow}>
+          <TouchableOpacity
+            style={[styles.button, styles.soloButton, !gender && styles.buttonDisabled]}
+            onPress={handleNext}
+            disabled={!gender}
+          >
+            <Text style={styles.buttonText}>Next</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
 
-  // ─── Step 2: Interest Selection ───
-  if (step === STEPS.INTERESTS) {
+  // ─── Step 2: Goal Selection ───
+  if (step === 1) {
     return (
       <View style={styles.container}>
-        <Text style={styles.stepLabel}>Step 2 of 3</Text>
-        <Text style={styles.title}>Pick your interests</Text>
-        <Text style={styles.subtitle}>
-          Select the areas you want to focus on
-        </Text>
+        <Text style={styles.stepLabel}>Step 2 of {TOTAL_STEPS}</Text>
+        <Text style={styles.title}>What's your main goal?</Text>
+        <Text style={styles.subtitle}>Pick the area you want to focus on most</Text>
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
-        <View style={styles.chipContainer}>
-          {INTEREST_CATEGORIES.map((interest) => {
-            const active = selectedInterests.includes(interest);
+        <View style={styles.goalList}>
+          {GOALS.map((g) => {
+            const active = goal === g;
             return (
               <TouchableOpacity
-                key={interest}
-                style={[styles.chip, active && styles.chipActive]}
-                onPress={() => toggleInterest(interest)}
+                key={g}
+                style={[styles.goalCard, active && styles.goalCardActive]}
+                onPress={() => setGoal(g)}
               >
-                <Text style={[styles.chipText, active && styles.chipTextActive]}>
-                  {interest.charAt(0).toUpperCase() + interest.slice(1)}
+                <Text style={[styles.goalText, active && styles.goalTextActive]}>
+                  {capitalize(g)}
                 </Text>
               </TouchableOpacity>
             );
@@ -165,7 +189,11 @@ export default function OnboardingScreen() {
           <TouchableOpacity style={styles.backButton} onPress={handleBack}>
             <Text style={styles.backText}>Back</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={handleNext}>
+          <TouchableOpacity
+            style={[styles.button, !goal && styles.buttonDisabled]}
+            onPress={handleNext}
+            disabled={!goal}
+          >
             <Text style={styles.buttonText}>Next</Text>
           </TouchableOpacity>
         </View>
@@ -173,10 +201,55 @@ export default function OnboardingScreen() {
     );
   }
 
-  // ─── Step 3: Habit Selection ───
+  // ─── Step 3: Interests Selection (max 3) ───
+  if (step === 2) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.stepLabel}>Step 3 of {TOTAL_STEPS}</Text>
+        <Text style={styles.title}>Pick your interests</Text>
+        <Text style={styles.subtitle}>
+          Select up to 3 areas you care about ({interests.length}/3)
+        </Text>
+
+        {error ? <Text style={styles.error}>{error}</Text> : null}
+
+        <View style={styles.chipContainer}>
+          {INTEREST_CATEGORIES.map((interest) => {
+            const active = interests.includes(interest);
+            return (
+              <TouchableOpacity
+                key={interest}
+                style={[styles.chip, active && styles.chipActive]}
+                onPress={() => toggleInterest(interest)}
+              >
+                <Text style={[styles.chipText, active && styles.chipTextActive]}>
+                  {capitalize(interest)}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        <View style={styles.navRow}>
+          <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+            <Text style={styles.backText}>Back</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, interests.length === 0 && styles.buttonDisabled]}
+            onPress={handleNext}
+            disabled={interests.length === 0}
+          >
+            <Text style={styles.buttonText}>Next</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  // ─── Step 4: Habit Selection ───
   return (
     <View style={styles.container}>
-      <Text style={styles.stepLabel}>Step 3 of 3</Text>
+      <Text style={styles.stepLabel}>Step 4 of {TOTAL_STEPS}</Text>
       <Text style={styles.title}>Choose 3 habits</Text>
       <Text style={styles.subtitle}>
         Pick the habits you want to start with ({selectedHabits.length}/3)
@@ -185,7 +258,7 @@ export default function OnboardingScreen() {
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
       <ScrollView style={styles.habitList} showsVerticalScrollIndicator={false}>
-        {recommendedHabits.map((habit) => {
+        {filteredHabits.map((habit) => {
           const active = selectedHabits.find((h) => h.id === habit.id);
           return (
             <TouchableOpacity
@@ -198,7 +271,7 @@ export default function OnboardingScreen() {
               </Text>
               <View style={styles.habitMeta}>
                 <Text style={styles.habitCategory}>
-                  {habit.category.charAt(0).toUpperCase() + habit.category.slice(1)}
+                  {capitalize(habit.category)}
                 </Text>
                 <Text style={styles.habitXP}>+{habit.xpReward} XP</Text>
               </View>
@@ -251,17 +324,13 @@ const styles = StyleSheet.create({
     color: '#888',
     marginBottom: 24,
   },
-  input: {
-    backgroundColor: '#16213e',
-    color: '#eaeaea',
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: '#0f3460',
-    minHeight: 80,
-    textAlignVertical: 'top',
+  error: {
+    color: '#ff6b6b',
+    marginBottom: 12,
+    fontSize: 14,
   },
+
+  // Buttons
   button: {
     backgroundColor: '#e94560',
     borderRadius: 12,
@@ -271,6 +340,9 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 8,
   },
+  soloButton: {
+    marginLeft: 0,
+  },
   buttonDisabled: {
     opacity: 0.5,
   },
@@ -279,10 +351,81 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '600',
   },
-  error: {
-    color: '#ff6b6b',
-    marginBottom: 12,
-    fontSize: 14,
+
+  // Navigation row
+  navRow: {
+    flexDirection: 'row',
+    marginTop: 'auto',
+    paddingBottom: 40,
+    paddingTop: 16,
+  },
+  backButton: {
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#0f3460',
+  },
+  backText: {
+    color: '#aaa',
+    fontSize: 17,
+    fontWeight: '500',
+  },
+
+  // Gender cards
+  genderRow: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  genderCard: {
+    flex: 1,
+    backgroundColor: '#16213e',
+    borderRadius: 16,
+    paddingVertical: 28,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#0f3460',
+  },
+  genderCardActive: {
+    borderColor: '#e94560',
+    backgroundColor: '#1e2a4a',
+  },
+  genderEmoji: {
+    fontSize: 40,
+    marginBottom: 10,
+  },
+  genderLabel: {
+    color: '#aaa',
+    fontSize: 17,
+    fontWeight: '600',
+  },
+  genderLabelActive: {
+    color: '#eaeaea',
+  },
+
+  // Goal cards
+  goalList: {
+    gap: 10,
+  },
+  goalCard: {
+    backgroundColor: '#16213e',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1.5,
+    borderColor: '#0f3460',
+  },
+  goalCardActive: {
+    borderColor: '#e94560',
+    backgroundColor: '#1e2a4a',
+  },
+  goalText: {
+    color: '#aaa',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  goalTextActive: {
+    color: '#eaeaea',
   },
 
   // Interest chips
@@ -310,27 +453,6 @@ const styles = StyleSheet.create({
   },
   chipTextActive: {
     color: '#fff',
-  },
-
-  // Navigation row
-  navRow: {
-    flexDirection: 'row',
-    marginTop: 'auto',
-    paddingBottom: 40,
-    paddingTop: 16,
-  },
-  backButton: {
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#0f3460',
-  },
-  backText: {
-    color: '#aaa',
-    fontSize: 17,
-    fontWeight: '500',
   },
 
   // Habit cards

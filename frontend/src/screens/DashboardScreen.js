@@ -12,14 +12,17 @@ import { useUser } from '../context/UserContext';
 import { getUserHabits, completeHabit, getTodayCompletions } from '../services/habitService';
 import { awardXP } from '../services/gamificationService';
 import { updateStreak } from '../services/streakService';
-import { getTodayString, randomPick } from '../utils/helpers';
-import { MOTIVATIONAL_MESSAGES } from '../utils/constants';
+import { getTodayCheck, submitCheck } from '../services/dailyCheckService';
+import { randomPick } from '../utils/helpers';
+import { MOTIVATIONAL_MESSAGES, DAILY_CHECKS } from '../utils/constants';
 import Avatar from '../components/Avatar';
 import XPBar from '../components/XPBar';
 import StreakBadge from '../components/StreakBadge';
 import HabitCard from '../components/HabitCard';
 import CelebrationModal from '../components/CelebrationModal';
 import XPPopup from '../components/XPPopup';
+import DailyCheckCard from '../components/DailyCheckCard';
+import DailyCheckModal from '../components/DailyCheckModal';
 
 export default function DashboardScreen({ navigation }) {
   const { user, logOut } = useAuth();
@@ -32,9 +35,13 @@ export default function DashboardScreen({ navigation }) {
   // Celebration / XP popup state
   const [showCelebration, setShowCelebration] = useState(false);
   const [newLevel, setNewLevel] = useState(null);
-  const [xpPopup, setXpPopup] = useState(null); // { amount, visible }
+  const [xpPopup, setXpPopup] = useState(null);
 
-  const loadHabits = useCallback(async () => {
+  // Daily checks state
+  const [dailyCheckData, setDailyCheckData] = useState(null);
+  const [selectedCheck, setSelectedCheck] = useState(null);
+
+  const loadData = useCallback(async () => {
     if (!user) return;
     try {
       const [userHabits, completedMap] = await Promise.all([
@@ -46,49 +53,75 @@ export default function DashboardScreen({ navigation }) {
     } catch (err) {
       console.error('Failed to load habits:', err);
     }
+    // Load daily checks separately so a failure here doesn't break the screen
+    try {
+      const checkData = await getTodayCheck(user.uid);
+      setDailyCheckData(checkData);
+    } catch (err) {
+      console.error('Failed to load daily checks:', err);
+      setDailyCheckData(null);
+    }
   }, [user]);
 
   useEffect(() => {
-    loadHabits();
+    loadData();
     setMotivation(randomPick(MOTIVATIONAL_MESSAGES));
-  }, [loadHabits]);
+  }, [loadData]);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadHabits();
+    await loadData();
     setMotivation(randomPick(MOTIVATIONAL_MESSAGES));
     setRefreshing(false);
   };
 
   const handleComplete = async (habit) => {
     try {
-      // 1. Record the completion
       await completeHabit(user.uid, habit.habitId, habit.xpReward);
-
-      // 2. Award XP and check for level-up
       const result = await awardXP(user.uid, habit.xpReward);
-
-      // 3. Update streak
       await updateStreak(user.uid);
 
-      // 4. Mark as completed today (local state)
       setTodayCompletions((prev) => ({ ...prev, [habit.habitId]: true }));
 
-      // 5. Show XP popup
       setXpPopup({ amount: habit.xpReward, visible: true });
       setTimeout(() => setXpPopup(null), 2000);
 
-      // 6. Show celebration if leveled up
       if (result.leveledUp) {
         setNewLevel(result.newLevel);
         setShowCelebration(true);
       }
 
-      // 7. Refresh motivation message
       setMotivation(randomPick(MOTIVATIONAL_MESSAGES));
     } catch (err) {
       console.error('Completion error:', err);
     }
+  };
+
+  // Daily check handlers
+  const handleCheckSubmit = async (type, value) => {
+    return await submitCheck(type, value, user.uid);
+  };
+
+  const handleCheckClose = (result) => {
+    setSelectedCheck(null);
+    if (!result) return;
+
+    setDailyCheckData((prev) => ({
+      ...prev,
+      [result.type || selectedCheck?.key]: result.xpAwarded !== undefined,
+    }));
+
+    if (result.xpAwarded > 0) {
+      setXpPopup({ amount: result.xpAwarded, visible: true });
+      setTimeout(() => setXpPopup(null), 2000);
+    }
+
+    if (result.leveledUp) {
+      setNewLevel(result.newLevel);
+      setShowCelebration(true);
+    }
+
+    loadData();
   };
 
   const allDone = habits.length > 0 && habits.every((h) => todayCompletions[h.habitId]);
@@ -123,8 +156,21 @@ export default function DashboardScreen({ navigation }) {
         {/* Motivational message */}
         <Text style={styles.motivation}>{motivation}</Text>
 
+        {/* Daily Check Section */}
+        <Text style={styles.sectionTitle}>Daily Check</Text>
+        <View style={styles.checkGrid}>
+          {DAILY_CHECKS.map((check) => (
+            <DailyCheckCard
+              key={check.key}
+              check={check}
+              answered={dailyCheckData ? dailyCheckData[check.key] : undefined}
+              onPress={() => setSelectedCheck(check)}
+            />
+          ))}
+        </View>
+
         {/* Active Habits */}
-        <Text style={styles.sectionTitle}>Today's Habits</Text>
+        <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Today's Habits</Text>
         {habits.map((habit) => (
           <HabitCard
             key={habit.id}
@@ -162,6 +208,14 @@ export default function DashboardScreen({ navigation }) {
         visible={showCelebration}
         level={newLevel}
         onClose={() => setShowCelebration(false)}
+      />
+
+      {/* Daily Check modal */}
+      <DailyCheckModal
+        visible={!!selectedCheck}
+        check={selectedCheck}
+        onSubmit={handleCheckSubmit}
+        onClose={handleCheckClose}
       />
     </View>
   );
@@ -206,6 +260,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     marginBottom: 12,
+  },
+  checkGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
   allDone: {
     color: '#2ecc71',
