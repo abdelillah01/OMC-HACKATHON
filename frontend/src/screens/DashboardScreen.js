@@ -23,6 +23,7 @@ import CelebrationModal from '../components/CelebrationModal';
 import XPPopup from '../components/XPPopup';
 import DailyCheckCard from '../components/DailyCheckCard';
 import DailyCheckModal from '../components/DailyCheckModal';
+import TasksModal from '../components/TasksModal';
 
 export default function DashboardScreen({ navigation }) {
   const { user, logOut } = useAuth();
@@ -40,6 +41,9 @@ export default function DashboardScreen({ navigation }) {
   // Daily checks state
   const [dailyCheckData, setDailyCheckData] = useState(null);
   const [selectedCheck, setSelectedCheck] = useState(null);
+
+  // Tasks modal state
+  const [showTasksModal, setShowTasksModal] = useState(false);
 
   const loadData = useCallback(async () => {
     if (!user) return;
@@ -124,6 +128,18 @@ export default function DashboardScreen({ navigation }) {
     loadData();
   };
 
+  // Tasks modal XP handler
+  const handleTaskXP = (result) => {
+    if (result.xpAwarded > 0) {
+      setXpPopup({ amount: result.xpAwarded, visible: true });
+      setTimeout(() => setXpPopup(null), 2000);
+    }
+    if (result.leveledUp) {
+      setNewLevel(result.newLevel);
+      setShowCelebration(true);
+    }
+  };
+
   const allDone = habits.length > 0 && habits.every((h) => todayCompletions[h.habitId]);
 
   return (
@@ -168,6 +184,19 @@ export default function DashboardScreen({ navigation }) {
             />
           ))}
         </View>
+
+        {/* Today's Tasks button */}
+        <TouchableOpacity
+          activeOpacity={0.6}
+          style={styles.tasksBtn}
+          onPress={() => setShowTasksModal(true)}
+        >
+          <Text style={styles.tasksBtnIcon}>📝</Text>
+          <View>
+            <Text style={styles.tasksBtnTitle}>Today's Tasks</Text>
+            <Text style={styles.tasksBtnSub}>Manage your personal to-do list</Text>
+          </View>
+        </TouchableOpacity>
 
         {/* Active Habits */}
         <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Today's Habits</Text>
@@ -217,6 +246,14 @@ export default function DashboardScreen({ navigation }) {
         onSubmit={handleCheckSubmit}
         onClose={handleCheckClose}
       />
+
+      {/* Tasks modal */}
+      <TasksModal
+        visible={showTasksModal}
+        userId={user?.uid}
+        onXP={handleTaskXP}
+        onClose={() => setShowTasksModal(false)}
+      />
     </View>
   );
 }
@@ -265,6 +302,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+  },
+  tasksBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#16213e',
+    borderRadius: 14,
+    padding: 16,
+    marginTop: 20,
+    borderWidth: 1,
+    borderColor: '#0f3460',
+  },
+  tasksBtnIcon: {
+    fontSize: 28,
+    marginRight: 14,
+  },
+  tasksBtnTitle: {
+    color: '#eaeaea',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  tasksBtnSub: {
+    color: '#888',
+    fontSize: 12,
+    marginTop: 2,
   },
   allDone: {
     color: '#2ecc71',

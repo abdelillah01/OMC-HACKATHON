@@ -26,6 +26,106 @@ export const getTodayCheck = async (userId) => {
  * - If NO → save false, no XP
  * Returns { xpAwarded, leveledUp, newLevel }
  */
+/**
+ * Helper: ensure today's doc exists and return its ref + data
+ */
+const ensureTodayDoc = async (userId) => {
+  const docId = getDocId(userId);
+  const docRef = doc(db, 'dailyChecks', docId);
+  const snap = await getDoc(docRef);
+
+  if (snap.exists()) {
+    return { docRef, data: snap.data() };
+  }
+
+  const newDoc = {
+    userId,
+    date: getTodayString(),
+    water: null,
+    movement: null,
+    productivity: null,
+    medicine: null,
+    sleep: null,
+    mood: null,
+    doctor: null,
+    xpEarned: 0,
+    tasks: [],
+  };
+  await setDoc(docRef, newDoc);
+  return { docRef, data: newDoc };
+};
+
+/**
+ * Get today's tasks array for a user (always returns an array)
+ */
+export const getTodayTasks = async (userId) => {
+  const { data } = await ensureTodayDoc(userId);
+  return data.tasks || [];
+};
+
+/**
+ * Add a task to today's list (max 8).
+ * Returns the updated tasks array.
+ */
+export const addTask = async (text, userId) => {
+  const { docRef, data } = await ensureTodayDoc(userId);
+  const tasks = data.tasks || [];
+
+  if (tasks.length >= 8) return tasks;
+
+  const updated = [...tasks, { text, completed: false, xpAwarded: false }];
+  await updateDoc(docRef, { tasks: updated });
+  return updated;
+};
+
+/**
+ * Toggle a task's completed state.
+ * Awards +5 XP on first completion (xpAwarded guard).
+ * Returns { tasks, xpAwarded, leveledUp, newLevel }
+ */
+export const toggleTask = async (index, userId) => {
+  const { docRef, data } = await ensureTodayDoc(userId);
+  const tasks = [...(data.tasks || [])];
+  let result = { xpAwarded: 0, leveledUp: false, newLevel: null };
+
+  if (index < 0 || index >= tasks.length) return { tasks, ...result };
+
+  const task = { ...tasks[index] };
+  task.completed = !task.completed;
+
+  // Award XP only on first completion
+  if (task.completed && !task.xpAwarded) {
+    task.xpAwarded = true;
+    const xpResult = await awardXP(userId, 5);
+    await updateStreak(userId);
+    result = { xpAwarded: 5, leveledUp: xpResult.leveledUp, newLevel: xpResult.newLevel };
+    await updateDoc(docRef, {
+      tasks: tasks.map((t, i) => (i === index ? task : t)),
+      xpEarned: (data.xpEarned || 0) + 5,
+    });
+  } else {
+    tasks[index] = task;
+    await updateDoc(docRef, { tasks: tasks.map((t, i) => (i === index ? task : t)) });
+  }
+
+  return { tasks: tasks.map((t, i) => (i === index ? task : t)), ...result };
+};
+
+/**
+ * Delete a task by index.
+ * Returns the updated tasks array.
+ */
+export const deleteTask = async (index, userId) => {
+  const { docRef, data } = await ensureTodayDoc(userId);
+  const tasks = [...(data.tasks || [])];
+
+  if (index < 0 || index >= tasks.length) return tasks;
+
+  tasks.splice(index, 1);
+  await updateDoc(docRef, { tasks });
+  return tasks;
+};
+
 export const submitCheck = async (type, value, userId) => {
   const docId = getDocId(userId);
   const docRef = doc(db, 'dailyChecks', docId);
