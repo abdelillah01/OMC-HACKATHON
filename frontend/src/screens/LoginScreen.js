@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -8,22 +8,24 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-} from 'react-native';
-import { useAuth } from '../context/AuthContext';
+  Image,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useAuth } from "../context/AuthContext";
 
 export default function LoginScreen({ navigation }) {
   const { logIn } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
     if (!email || !password) {
-      setError('Please fill in all fields.');
+      setError("Please fill in all fields.");
       return;
     }
-    setError('');
+    setError("");
     setLoading(true);
     try {
       await logIn(email.trim(), password);
@@ -37,32 +39,67 @@ export default function LoginScreen({ navigation }) {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <View style={styles.inner}>
-        <Text style={styles.title}>PEXILIS</Text>
-        <Text style={styles.subtitle}>Welcome back, adventurer</Text>
+        {/* IMAGE DU CHEVALIER AGRANDIE ET DECALEE */}
+        <View style={styles.imageContainer}>
+          <Image
+            source={require("../../assets/knight.png")}
+            style={styles.knightImage}
+            resizeMode="contain"
+          />
+        </View>
+
+        <Text style={styles.title}>Welcome back !</Text>
+        <Text style={styles.subtitle}>Log in to your account</Text>
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          placeholderTextColor="#888"
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          keyboardType="email-address"
-        />
+        <View style={styles.inputWrapper}>
+          <Ionicons
+            name="person"
+            size={20}
+            color="#666"
+            style={styles.inputIcon}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your username"
+            placeholderTextColor="#888"
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+          />
+        </View>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          placeholderTextColor="#888"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
+        <View style={styles.inputWrapper}>
+          <Ionicons
+            name="lock-closed"
+            size={20}
+            color="#666"
+            style={styles.inputIcon}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your password"
+            placeholderTextColor="#888"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
+          <Ionicons
+            name="eye-outline"
+            size={20}
+            color="#666"
+            style={styles.eyeIcon}
+          />
+        </View>
+
+        <View style={styles.rememberRow}>
+          <Ionicons name="checkmark-circle" size={18} color="#4a5d23" />
+          <Text style={styles.rememberText}> Remember me</Text>
+        </View>
 
         <TouchableOpacity
           style={styles.button}
@@ -72,13 +109,13 @@ export default function LoginScreen({ navigation }) {
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.buttonText}>Log In</Text>
+            <Text style={styles.buttonText}>Log in</Text>
           )}
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
+        <TouchableOpacity onPress={() => navigation.navigate("Signup")}>
           <Text style={styles.link}>
-            Don't have an account? <Text style={styles.linkBold}>Sign Up</Text>
+            Don't have an account ? <Text style={styles.linkBold}>Sign up</Text>
           </Text>
         </TouchableOpacity>
       </View>
@@ -89,62 +126,95 @@ export default function LoginScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a2e',
+    backgroundColor: "#FFFFFF",
   },
   inner: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     paddingHorizontal: 30,
+    marginTop: -10,
+  },
+  imageContainer: {
+    alignItems: "center", // Centre horizontalement le conteneur
+    marginBottom: 5,
+  },
+  knightImage: {
+    width: 422, // Plus grand (était à 200)
+    height: 289, // Plus grand (était à 200)
+    marginLeft: 135, // Pousse l'image un peu vers la droite
   },
   title: {
-    fontSize: 40,
-    fontWeight: 'bold',
-    color: '#e94560',
-    textAlign: 'center',
+    fontSize: 34,
+    color: "#283618",
+    textAlign: "center",
     marginBottom: 4,
+    fontFamily: "Jersey20",
   },
   subtitle: {
     fontSize: 16,
-    color: '#aaa',
-    textAlign: 'center',
-    marginBottom: 32,
+    color: "#99a",
+    textAlign: "center",
+    marginBottom: 20,
+    fontFamily: "Jersey20",
+  },
+  inputWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f0f1e8",
+    borderRadius: 15,
+    marginBottom: 16,
+    paddingHorizontal: 15,
+    height: 55,
+  },
+  inputIcon: {
+    marginRight: 10,
   },
   input: {
-    backgroundColor: '#16213e',
-    color: '#eaeaea',
-    borderRadius: 12,
-    padding: 14,
-    fontSize: 16,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: '#0f3460',
+    flex: 1,
+    color: "#333",
+    fontSize: 18,
+    fontFamily: "Jersey20",
+  },
+  eyeIcon: {
+    marginLeft: 10,
+  },
+  rememberRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 25,
+    marginLeft: 5,
+  },
+  rememberText: {
+    color: "#99a",
+    fontSize: 14,
+    fontFamily: "Jersey20",
   },
   button: {
-    backgroundColor: '#e94560',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    marginTop: 8,
+    backgroundColor: "#283618",
+    borderRadius: 30,
+    padding: 15,
+    alignItems: "center",
     marginBottom: 20,
   },
   buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
+    color: "#fff",
+    fontSize: 24,
+    fontFamily: "Jersey20",
   },
   link: {
-    color: '#aaa',
-    textAlign: 'center',
-    fontSize: 14,
+    color: "#99a",
+    textAlign: "center",
+    fontSize: 16,
+    fontFamily: "Jersey20",
   },
   linkBold: {
-    color: '#e94560',
-    fontWeight: '600',
+    color: "#283618",
+    textDecorationLine: "underline",
   },
   error: {
-    color: '#ff6b6b',
-    textAlign: 'center',
-    marginBottom: 14,
-    fontSize: 14,
+    color: "#e94560",
+    textAlign: "center",
+    marginBottom: 10,
+    fontFamily: "Jersey20",
   },
 });
