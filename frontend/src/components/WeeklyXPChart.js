@@ -28,7 +28,7 @@ export default function WeeklyXPChart({ userId }) {
     return (
       <View style={styles.container}>
         <Text style={styles.title}>Weekly XP</Text>
-        <ActivityIndicator color="#e94560" style={{ marginVertical: 30 }} />
+        <ActivityIndicator color="#9b1c1c" style={{ marginVertical: 30 }} />
       </View>
     );
   }
@@ -43,7 +43,7 @@ export default function WeeklyXPChart({ userId }) {
     datasets: [
       {
         data: data.map((d) => d.xp),
-        color: () => '#e94560',
+        color: () => '#9b1c1c',
         strokeWidth: 2.5,
       },
     ],
@@ -72,21 +72,24 @@ export default function WeeklyXPChart({ userId }) {
           yAxisSuffix=""
           yAxisInterval={1}
           chartConfig={{
-            backgroundColor: '#16213e',
-            backgroundGradientFrom: '#16213e',
-            backgroundGradientTo: '#16213e',
+            backgroundColor: '#fff8ec',
+            backgroundGradientFrom: '#fff8ec',
+            backgroundGradientTo: '#fff8ec',
             decimalPlaces: 0,
-            color: () => 'rgba(233, 69, 96, 0.3)',
-            labelColor: () => '#888',
+            color: () => 'rgba(155, 28, 28, 0.3)',
+            labelColor: () => '#8c7a5e',
             propsForDots: {
               r: '5',
               strokeWidth: '2',
-              stroke: '#e94560',
-              fill: '#1a1a2e',
+              stroke: '#9b1c1c',
+              fill: '#fff8dc',
             },
             propsForBackgroundLines: {
-              stroke: '#0f3460',
+              stroke: '#8c9b6b',
               strokeWidth: 0.5,
+            },
+            propsForLabels: {
+              fontFamily: 'Jersey20',
             },
           }}
           bezier
@@ -105,12 +108,12 @@ export default function WeeklyXPChart({ userId }) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#16213e',
+    backgroundColor: '#fff8ec',
     borderRadius: 16,
     padding: 16,
     marginBottom: 24,
-    borderWidth: 1,
-    borderColor: '#0f3460',
+    borderWidth: 1.5,
+    borderColor: '#8c9b6b',
   },
   headerRow: {
     flexDirection: 'row',
@@ -119,14 +122,16 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   title: {
-    color: '#eaeaea',
+    color: '#283618',
     fontSize: 16,
     fontWeight: '700',
+    fontFamily: 'Jersey20',
   },
   total: {
-    color: '#e94560',
+    color: '#9b1c1c',
     fontSize: 13,
     fontWeight: '600',
+    fontFamily: 'Jersey20',
   },
   chartWrapper: {
     alignItems: 'center',
@@ -136,10 +141,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   bestDay: {
-    color: '#888',
+    color: '#8c7a5e',
     fontSize: 12,
     textAlign: 'center',
     marginTop: 8,
     fontStyle: 'italic',
+    fontFamily: 'Jersey20',
   },
 });

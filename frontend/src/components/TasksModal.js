@@ -8,7 +8,6 @@ import {
   FlatList,
   StyleSheet,
   ActivityIndicator,
-  Platform,
 } from 'react-native';
 import { getTodayTasks, addTask, toggleTask, deleteTask } from '../services/dailyCheckService';
 
@@ -18,7 +17,6 @@ export default function TasksModal({ visible, userId, onXP, onClose }) {
   const [loading, setLoading] = useState(false);
   const [adding, setAdding] = useState(false);
 
-  // Load tasks when modal opens
   useEffect(() => {
     if (visible && userId) {
       setLoading(true);
@@ -97,18 +95,16 @@ export default function TasksModal({ visible, userId, onXP, onClose }) {
     <Modal visible={visible} transparent animationType="fade">
       <View style={styles.overlay}>
         <View style={styles.card}>
-          {/* Header */}
           <Text style={styles.title}>Today's Tasks</Text>
           <Text style={styles.subtitle}>
             {tasks.length}/8 tasks{tasks.length >= 8 ? ' (max reached)' : ''}
           </Text>
 
-          {/* Input row */}
           <View style={styles.inputRow}>
             <TextInput
               style={styles.input}
               placeholder="Add a task..."
-              placeholderTextColor="#666"
+              placeholderTextColor="#b5a98a"
               value={newText}
               onChangeText={setNewText}
               maxLength={80}
@@ -131,9 +127,8 @@ export default function TasksModal({ visible, userId, onXP, onClose }) {
             </TouchableOpacity>
           </View>
 
-          {/* Task list */}
           {loading ? (
-            <ActivityIndicator color="#e94560" size="large" style={{ marginTop: 24 }} />
+            <ActivityIndicator color="#9b1c1c" size="large" style={{ marginTop: 24 }} />
           ) : tasks.length === 0 ? (
             <Text style={styles.empty}>No tasks yet. Add one above!</Text>
           ) : (
@@ -146,7 +141,6 @@ export default function TasksModal({ visible, userId, onXP, onClose }) {
             />
           )}
 
-          {/* Close button */}
           <TouchableOpacity
             activeOpacity={0.7}
             style={styles.closeBtn}
@@ -163,31 +157,33 @@ export default function TasksModal({ visible, userId, onXP, onClose }) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   card: {
-    backgroundColor: '#16213e',
+    backgroundColor: '#fff8ec',
     borderRadius: 20,
     padding: 24,
     width: '90%',
     maxHeight: '80%',
     borderWidth: 2,
-    borderColor: '#0f3460',
+    borderColor: '#8c9b6b',
   },
   title: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#eaeaea',
+    color: '#283618',
     textAlign: 'center',
     marginBottom: 4,
+    fontFamily: 'Jersey20',
   },
   subtitle: {
     fontSize: 13,
-    color: '#888',
+    color: '#8c7a5e',
     textAlign: 'center',
     marginBottom: 16,
+    fontFamily: 'Jersey20',
   },
   inputRow: {
     flexDirection: 'row',
@@ -195,18 +191,19 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    backgroundColor: '#1a1a2e',
+    backgroundColor: '#f5f0e1',
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    color: '#eaeaea',
+    color: '#283618',
     fontSize: 15,
-    borderWidth: 1,
-    borderColor: '#0f3460',
+    borderWidth: 1.5,
+    borderColor: '#8c9b6b',
     marginRight: 10,
+    fontFamily: 'Jersey20',
   },
   addBtn: {
-    backgroundColor: '#e94560',
+    backgroundColor: '#9b1c1c',
     borderRadius: 10,
     width: 44,
     height: 44,
@@ -221,6 +218,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '700',
     lineHeight: 26,
+    fontFamily: 'Jersey20',
   },
   list: {
     maxHeight: 300,
@@ -228,19 +226,19 @@ const styles = StyleSheet.create({
   taskRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1a1a2e',
+    backgroundColor: '#f5f0e1',
     borderRadius: 10,
     padding: 12,
     marginBottom: 8,
-    borderWidth: 1,
-    borderColor: '#0f3460',
+    borderWidth: 1.5,
+    borderColor: '#8c9b6b',
   },
   checkbox: {
     width: 26,
     height: 26,
     borderRadius: 6,
     borderWidth: 2,
-    borderColor: '#0f3460',
+    borderColor: '#8c9b6b',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -253,11 +251,13 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: 'bold',
+    fontFamily: 'Jersey20',
   },
   taskText: {
     flex: 1,
-    color: '#eaeaea',
+    color: '#283618',
     fontSize: 15,
+    fontFamily: 'Jersey20',
   },
   taskTextDone: {
     textDecorationLine: 'line-through',
@@ -268,34 +268,37 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: 'rgba(233,69,96,0.15)',
+    backgroundColor: 'rgba(155,28,28,0.15)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   deleteIcon: {
-    color: '#e94560',
+    color: '#9b1c1c',
     fontSize: 13,
     fontWeight: 'bold',
+    fontFamily: 'Jersey20',
   },
   empty: {
-    color: '#666',
+    color: '#b5a98a',
     textAlign: 'center',
     fontSize: 14,
     fontStyle: 'italic',
     marginVertical: 24,
+    fontFamily: 'Jersey20',
   },
   closeBtn: {
-    backgroundColor: '#1a1a2e',
+    backgroundColor: '#f5f0e1',
     borderRadius: 12,
     paddingVertical: 12,
     alignItems: 'center',
     marginTop: 16,
-    borderWidth: 1,
-    borderColor: '#0f3460',
+    borderWidth: 1.5,
+    borderColor: '#8c9b6b',
   },
   closeBtnText: {
-    color: '#aaa',
+    color: '#8c7a5e',
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: 'Jersey20',
   },
 });

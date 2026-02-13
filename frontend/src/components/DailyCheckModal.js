@@ -12,7 +12,6 @@ export default function DailyCheckModal({ visible, check, onSubmit, onClose }) {
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState(null);
 
-  // Reset internal state whenever the modal opens/closes
   useEffect(() => {
     if (!visible) {
       setLoading(false);
@@ -58,7 +57,7 @@ export default function DailyCheckModal({ visible, check, onSubmit, onClose }) {
                   : "That's okay. Tomorrow is another opportunity."}
               </Text>
             ) : loading ? (
-              <ActivityIndicator color="#e94560" size="large" style={{ marginTop: 20 }} />
+              <ActivityIndicator color="#9b1c1c" size="large" style={{ marginTop: 20 }} />
             ) : (
               <View style={styles.buttonRow}>
                 <TouchableOpacity
@@ -97,18 +96,18 @@ export default function DailyCheckModal({ visible, check, onSubmit, onClose }) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   card: {
-    backgroundColor: '#16213e',
+    backgroundColor: '#fff8ec',
     borderRadius: 20,
     padding: 28,
     alignItems: 'center',
     marginHorizontal: 30,
     borderWidth: 2,
-    borderColor: '#0f3460',
+    borderColor: '#8c9b6b',
     width: '85%',
   },
   icon: {
@@ -117,10 +116,11 @@ const styles = StyleSheet.create({
   },
   question: {
     fontSize: 18,
-    color: '#eaeaea',
+    color: '#283618',
     textAlign: 'center',
     fontWeight: '600',
     marginBottom: 24,
+    fontFamily: 'Jersey20',
   },
   buttonRow: {
     flexDirection: 'row',
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
   },
   noBtn: {
     flex: 1,
-    backgroundColor: '#e94560',
+    backgroundColor: '#9b1c1c',
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
@@ -147,19 +147,22 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 17,
     fontWeight: '700',
+    fontFamily: 'Jersey20',
   },
   feedback: {
     fontSize: 16,
-    color: '#aaa',
+    color: '#8c7a5e',
     textAlign: 'center',
     fontStyle: 'italic',
     marginTop: 8,
+    fontFamily: 'Jersey20',
   },
   cancelBtn: {
     marginTop: 16,
   },
   cancelText: {
-    color: '#666',
+    color: '#8c7a5e',
     fontSize: 14,
+    fontFamily: 'Jersey20',
   },
 });

@@ -33,23 +33,25 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   label: {
-    color: '#aaa',
+    color: '#8c7a5e',
     fontSize: 13,
     fontWeight: '600',
+    fontFamily: 'Jersey20',
   },
   value: {
-    color: '#aaa',
+    color: '#8c7a5e',
     fontSize: 13,
+    fontFamily: 'Jersey20',
   },
   track: {
     height: 10,
-    backgroundColor: '#0f3460',
+    backgroundColor: '#d4c9a8',
     borderRadius: 5,
     overflow: 'hidden',
   },
   fill: {
     height: '100%',
-    backgroundColor: '#e94560',
+    backgroundColor: '#9b1c1c',
     borderRadius: 5,
   },
 });

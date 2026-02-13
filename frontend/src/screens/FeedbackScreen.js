@@ -3,16 +3,15 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   StyleSheet,
   Alert,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
 } from 'react-native';
-import { doc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../context/AuthContext';
+import MainLayout from '../components/MainLayout';
 
 export default function FeedbackScreen({ navigation }) {
   const { user } = useAuth();
@@ -41,104 +40,111 @@ export default function FeedbackScreen({ navigation }) {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView contentContainerStyle={styles.scroll}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={styles.backText}>← Back</Text>
-        </TouchableOpacity>
+      <MainLayout
+        navigation={navigation}
+        title="Feedback"
+        showEncouragement={false}
+        showActionGrid={false}
+      >
+        <View style={styles.starsSection}>
+          <Text style={styles.starBig}>⭐</Text>
+          <View style={styles.starsRow}>
+            <Text style={styles.starSmall}>⭐</Text>
+            <View style={{ width: 40 }} />
+            <Text style={styles.starSmall}>⭐</Text>
+          </View>
+        </View>
 
-        <Text style={styles.title}>Give Us Your Feedback</Text>
-        <Text style={styles.subtitle}>
-          Help us improve PEXILIS! Tell us what you love or what we can do better.
-        </Text>
+        <View style={styles.textSection}>
+          <Text style={styles.heading}>We're here to help.</Text>
+          <Text style={styles.heading}>Don't forget to give</Text>
+          <Text style={styles.heading}>us your feedback!</Text>
+        </View>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Write your feedback here..."
-          placeholderTextColor="#666"
-          value={message}
-          onChangeText={setMessage}
-          multiline
-          maxLength={500}
-          textAlignVertical="top"
-        />
-
-        <Text style={styles.charCount}>{message.length}/500</Text>
-
-        <TouchableOpacity
-          activeOpacity={0.7}
-          style={[styles.sendBtn, (!message.trim() || sending) && styles.sendBtnDisabled]}
-          onPress={handleSend}
-          disabled={!message.trim() || sending}
-        >
-          <Text style={styles.sendBtnText}>{sending ? 'Sending...' : 'Send Feedback'}</Text>
-        </TouchableOpacity>
-      </ScrollView>
+        <View style={styles.bubbleWrapper}>
+          <View style={styles.bubble}>
+            <TextInput
+              style={styles.bubbleInput}
+              placeholder="write here ......"
+              placeholderTextColor="#b5a98a"
+              value={message}
+              onChangeText={setMessage}
+              multiline
+              maxLength={500}
+              textAlignVertical="top"
+              onSubmitEditing={handleSend}
+              blurOnSubmit
+            />
+          </View>
+          <View style={styles.bubbleTail} />
+        </View>
+      </MainLayout>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#1a1a2e',
-  },
-  scroll: {
-    padding: 24,
-    paddingTop: 56,
-  },
-  backBtn: {
-    marginBottom: 20,
-  },
-  backText: {
-    color: '#e94560',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    color: '#eaeaea',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#888',
-    marginBottom: 24,
-    lineHeight: 20,
-  },
-  input: {
-    backgroundColor: '#16213e',
-    borderRadius: 14,
-    padding: 16,
-    color: '#eaeaea',
-    fontSize: 15,
-    minHeight: 160,
-    borderWidth: 1,
-    borderColor: '#0f3460',
-    lineHeight: 22,
-  },
-  charCount: {
-    color: '#666',
-    fontSize: 12,
-    textAlign: 'right',
-    marginTop: 6,
-    marginBottom: 20,
-  },
-  sendBtn: {
-    backgroundColor: '#e94560',
-    borderRadius: 12,
-    paddingVertical: 14,
+  starsSection: {
     alignItems: 'center',
+    marginBottom: 30,
   },
-  sendBtnDisabled: {
-    opacity: 0.5,
+  starBig: {
+    fontSize: 60,
+    marginBottom: 6,
   },
-  sendBtnText: {
-    color: '#fff',
-    fontSize: 17,
-    fontWeight: '600',
+  starsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  starSmall: {
+    fontSize: 36,
+  },
+  textSection: {
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  heading: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#3b2f1e',
+    textAlign: 'center',
+    lineHeight: 28,
+    fontFamily: 'Jersey20',
+  },
+  bubbleWrapper: {
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  bubble: {
+    width: '100%',
+    backgroundColor: '#ffffff',
+    borderRadius: 24,
+    borderWidth: 2.5,
+    borderColor: '#c9bda3',
+    padding: 20,
+    minHeight: 150,
+  },
+  bubbleInput: {
+    fontSize: 16,
+    color: '#3b2f1e',
+    lineHeight: 22,
+    fontFamily: 'Jersey20',
+    minHeight: 110,
+  },
+  bubbleTail: {
+    width: 20,
+    height: 20,
+    backgroundColor: '#ffffff',
+    borderRightWidth: 2.5,
+    borderBottomWidth: 2.5,
+    borderColor: '#c9bda3',
+    transform: [{ rotate: '45deg' }],
+    marginTop: -12,
+    alignSelf: 'flex-end',
+    marginRight: 40,
   },
 });

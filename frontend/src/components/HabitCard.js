@@ -53,14 +53,14 @@ export default function HabitCard({ habit, completedToday, onComplete }) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#16213e',
+    backgroundColor: '#fff8ec',
     borderRadius: 14,
     padding: 16,
     marginBottom: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#0f3460',
+    borderWidth: 1.5,
+    borderColor: '#8c9b6b',
   },
   cardCompleted: {
     borderColor: '#2ecc71',
@@ -71,10 +71,11 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   title: {
-    color: '#eaeaea',
+    color: '#283618',
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 4,
+    fontFamily: 'Jersey20',
   },
   titleCompleted: {
     color: '#2ecc71',
@@ -84,16 +85,18 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   category: {
-    color: '#666',
+    color: '#8c7a5e',
     fontSize: 13,
+    fontFamily: 'Jersey20',
   },
   xp: {
-    color: '#e94560',
+    color: '#9b1c1c',
     fontSize: 13,
     fontWeight: '600',
+    fontFamily: 'Jersey20',
   },
   completeBtn: {
-    backgroundColor: '#e94560',
+    backgroundColor: '#9b1c1c',
     borderRadius: 10,
     paddingVertical: 10,
     paddingHorizontal: 16,
@@ -107,5 +110,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: '600',
+    fontFamily: 'Jersey20',
   },
 });

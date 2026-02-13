@@ -3,16 +3,14 @@ import {
   View,
   Text,
   TextInput,
-  FlatList,
+  Image,
   StyleSheet,
-  TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../context/AuthContext';
-import { AVATAR_STAGES } from '../utils/constants';
-import { getAvatarStage } from '../utils/helpers';
+import MainLayout from '../components/MainLayout';
 
 export default function FriendsScreen({ navigation }) {
   const { user } = useAuth();
@@ -46,165 +44,141 @@ export default function FriendsScreen({ navigation }) {
       )
     : users;
 
-  const renderUser = ({ item }) => {
-    const stage = getAvatarStage(item.level || 1);
-    const stageName = AVATAR_STAGES[stage]?.name || 'Villager';
+  const renderUser = (item) => {
+    const xp = item.xp || 0;
+    const level = item.level || 1;
+    const xpForNextLevel = level * 100;
+    const progressPercent = Math.min((xp / xpForNextLevel) * 100, 100);
 
     return (
-      <View style={styles.card}>
-        <View style={styles.avatarCircle}>
-          <Text style={styles.avatarEmoji}>
-            {stage === 4 ? '🛡️' : stage === 3 ? '⚔️' : stage === 2 ? '🎒' : '🧑'}
-          </Text>
+      <View key={item.uid} style={styles.friendCard}>
+        <View style={styles.pixelAvatar}>
+          <Image
+            source={
+              item.gender === 'female'
+                ? require('../assets/avatars/female_avatar.png')
+                : require('../assets/avatars/male_avatar.png')
+            }
+            style={styles.avatarImage}
+          />
         </View>
-        <View style={styles.info}>
-          <Text style={styles.name}>{item.name || 'Adventurer'}</Text>
-          <Text style={styles.meta}>
-            Level {item.level || 1} · {stageName}
-          </Text>
+        <View style={styles.friendInfo}>
+          <Text style={styles.friendName}>{item.name || 'Adventurer'}</Text>
+          <View style={styles.progressBar}>
+            <View style={[styles.progressFill, { width: `${progressPercent}%` }]} />
+          </View>
         </View>
-        <View style={styles.xpBadge}>
-          <Text style={styles.xpText}>{item.xp || 0}</Text>
-          <Text style={styles.xpLabel}>XP</Text>
-        </View>
+        <Text style={styles.rose}></Text>
       </View>
     );
   };
 
   return (
-    <View style={styles.container}>
-      <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-        <Text style={styles.backText}>← Back</Text>
-      </TouchableOpacity>
-
-      <Text style={styles.title}>Friends</Text>
+    <MainLayout
+      navigation={navigation}
+      title="Friends"
+      showEncouragement={false}
+      showActionGrid={false}
+    >
       <Text style={styles.subtitle}>{users.length} adventurers on the quest</Text>
 
       <TextInput
         style={styles.searchInput}
         placeholder="Search by name..."
-        placeholderTextColor="#666"
+        placeholderTextColor="#b5a98a"
         value={search}
         onChangeText={setSearch}
       />
 
       {loading ? (
-        <ActivityIndicator color="#e94560" size="large" style={{ marginTop: 40 }} />
+        <ActivityIndicator color="#9b1c1c" size="large" style={{ marginTop: 40 }} />
       ) : filtered.length === 0 ? (
         <Text style={styles.empty}>
           {search.trim() ? 'No friends match that name.' : 'No other users yet.'}
         </Text>
       ) : (
-        <FlatList
-          data={filtered}
-          keyExtractor={(item) => item.uid}
-          renderItem={renderUser}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 20 }}
-        />
+        filtered.map(renderUser)
       )}
-    </View>
+    </MainLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#1a1a2e',
-    padding: 24,
-    paddingTop: 56,
-  },
-  backBtn: {
-    marginBottom: 20,
-  },
-  backText: {
-    color: '#e94560',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    color: '#eaeaea',
-    marginBottom: 4,
-  },
   subtitle: {
     fontSize: 13,
-    color: '#888',
+    color: '#8c7a5e',
     marginBottom: 16,
+    textAlign: 'center',
+    fontFamily: 'Jersey20',
   },
   searchInput: {
-    backgroundColor: '#16213e',
+    backgroundColor: '#fff8ec',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    color: '#eaeaea',
+    color: '#283618',
     fontSize: 15,
-    borderWidth: 1,
-    borderColor: '#0f3460',
+    borderWidth: 2,
+    borderColor: '#8c9b6b',
     marginBottom: 16,
+    fontFamily: 'Jersey20',
   },
-  card: {
+  friendCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#16213e',
+    backgroundColor: '#fff8ec',
     borderRadius: 14,
     padding: 14,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#0f3460',
+    marginBottom: 12,
+    borderWidth: 2,
+    borderColor: '#8c9b6b',
   },
-  avatarCircle: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: '#1a1a2e',
+  pixelAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    backgroundColor: '#f2d6b3',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#0f3460',
-    marginRight: 14,
+    marginRight: 12,
   },
-  avatarEmoji: {
-    fontSize: 22,
+  avatarImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    resizeMode: 'cover',
   },
-  info: {
+  friendInfo: {
     flex: 1,
   },
-  name: {
-    color: '#eaeaea',
+  friendName: {
+    color: '#283618',
     fontSize: 16,
-    fontWeight: '600',
-  },
-  meta: {
-    color: '#888',
-    fontSize: 12,
-    marginTop: 2,
-  },
-  xpBadge: {
-    alignItems: 'center',
-    backgroundColor: '#1a1a2e',
-    borderRadius: 10,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: '#e94560',
-  },
-  xpText: {
-    color: '#e94560',
-    fontSize: 15,
     fontWeight: '700',
+    marginBottom: 6,
+    fontFamily: 'Jersey20',
   },
-  xpLabel: {
-    color: '#e94560',
-    fontSize: 10,
-    fontWeight: '500',
+  progressBar: {
+    height: 6,
+    backgroundColor: '#f1c0c0',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#9b1c1c',
+    borderRadius: 3,
+  },
+  rose: {
+    fontSize: 20,
+    marginLeft: 10,
   },
   empty: {
-    color: '#666',
+    color: '#8c7a5e',
     textAlign: 'center',
     fontSize: 14,
     fontStyle: 'italic',
     marginTop: 40,
+    fontFamily: 'Jersey20',
   },
 });

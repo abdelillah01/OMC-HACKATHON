@@ -23,12 +23,13 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 40,
     borderWidth: 3,
-    borderColor: '#e94560',
+    borderColor: '#9b1c1c',
     marginBottom: 6,
   },
   name: {
-    color: '#ccc',
+    color: '#8c7a5e',
     fontSize: 13,
     fontWeight: '500',
+    fontFamily: 'Jersey20',
   },
 });

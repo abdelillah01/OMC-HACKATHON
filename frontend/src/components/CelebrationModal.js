@@ -35,18 +35,18 @@ export default function CelebrationModal({ visible, level, onClose }) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   card: {
-    backgroundColor: '#16213e',
+    backgroundColor: '#fff8ec',
     borderRadius: 20,
     padding: 32,
     alignItems: 'center',
     marginHorizontal: 30,
     borderWidth: 2,
-    borderColor: '#e94560',
+    borderColor: '#9b1c1c',
   },
   emoji: {
     fontSize: 48,
@@ -55,21 +55,24 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#e94560',
+    color: '#9b1c1c',
     marginBottom: 8,
+    fontFamily: 'Jersey20',
   },
   levelText: {
     fontSize: 18,
-    color: '#eaeaea',
+    color: '#283618',
     marginBottom: 4,
+    fontFamily: 'Jersey20',
   },
   avatarText: {
     fontSize: 15,
-    color: '#aaa',
+    color: '#8c7a5e',
     marginBottom: 24,
+    fontFamily: 'Jersey20',
   },
   button: {
-    backgroundColor: '#e94560',
+    backgroundColor: '#9b1c1c',
     borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 40,
@@ -78,5 +81,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: 'Jersey20',
   },
 });

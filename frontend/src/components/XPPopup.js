@@ -59,5 +59,6 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0,0,0,0.6)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 4,
+    fontFamily: 'Jersey20',
   },
 });

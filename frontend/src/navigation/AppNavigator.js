@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { ActivityIndicator, View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -28,13 +28,13 @@ const Drawer = createDrawerNavigator();
 
 // ─── Menu items config ───
 const MENU_ITEMS = [
-  { label: 'Home Page', icon: '🏠', route: 'HomeTabs', screen: 'Dashboard' },
-  { label: 'Daily Habit', icon: '⚡', route: 'HomeTabs', screen: 'Progress' },
-  { label: 'Today\'s Plan', icon: '📝', route: 'HomeTabs', screen: 'Dashboard', params: { openTasks: true } },
-  { label: 'Edit Profile', icon: '✏️', route: 'EditProfile' },
-  { label: 'See Your Friends', icon: '👥', route: 'Friends' },
-  { label: 'Give Us Your Feedback', icon: '💬', route: 'Feedback' },
-  { label: 'Nearby Hospitals', icon: '🏥', route: 'Hospitals' },
+  { label: 'Home Page', icon: '', route: 'HomeTabs', screen: 'Dashboard' },
+  { label: 'Daily Habit', icon: '', route: 'HomeTabs', screen: 'Progress' },
+  { label: 'Today\'s Plan', icon: '', route: 'HomeTabs', screen: 'Dashboard', params: { openTasks: true } },
+  { label: 'Edit Profile', icon: '', route: 'EditProfile' },
+  { label: 'See Your Friends', icon: '', route: 'Friends' },
+  { label: 'Give Us Your Feedback', icon: '', route: 'Feedback' },
+  { label: 'Nearby Hospitals', icon: '', route: 'Hospitals' },
 ];
 
 // ─── Custom Drawer Content ───
@@ -62,7 +62,14 @@ function CustomDrawerContent(props) {
       {/* Profile header */}
       <View style={drawerStyles.profileSection}>
         <View style={drawerStyles.avatarCircle}>
-          <Text style={drawerStyles.avatarEmoji}>🧑</Text>
+          <Image
+            source={
+              profile?.gender === 'female'
+                ? require('../assets/avatars/female_avatar.png')
+                : require('../assets/avatars/male_avatar.png')
+            }
+            style={drawerStyles.avatarImage}
+          />
         </View>
         <Text style={drawerStyles.profileName}>{profile?.name || 'Adventurer'}</Text>
         <Text style={drawerStyles.profileLevel}>Level {profile?.level || 1}</Text>
@@ -92,7 +99,7 @@ function CustomDrawerContent(props) {
         onPress={logOut}
       >
         <Text style={drawerStyles.menuIcon}>🚪</Text>
-        <Text style={[drawerStyles.menuLabel, { color: '#e94560' }]}>Log Out</Text>
+        <Text style={[drawerStyles.menuLabel, { color: '#9b1c1c' }]}>Log Out</Text>
       </TouchableOpacity>
     </DrawerContentScrollView>
   );
@@ -111,30 +118,35 @@ const drawerStyles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#16213e',
+    backgroundColor: '#fff8ec',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#e94560',
+    borderColor: '#9b1c1c',
     marginBottom: 10,
   },
-  avatarEmoji: {
-    fontSize: 30,
+  avatarImage: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    resizeMode: 'cover',
   },
   profileName: {
-    color: '#eaeaea',
+    color: '#283618',
     fontSize: 18,
     fontWeight: '700',
+    fontFamily: 'Jersey20',
   },
   profileLevel: {
-    color: '#e94560',
+    color: '#9b1c1c',
     fontSize: 13,
     fontWeight: '600',
     marginTop: 2,
+    fontFamily: 'Jersey20',
   },
   divider: {
     height: 1,
-    backgroundColor: '#0f3460',
+    backgroundColor: '#c9bda3',
     marginVertical: 12,
     marginHorizontal: 20,
   },
@@ -151,9 +163,10 @@ const drawerStyles = StyleSheet.create({
     textAlign: 'center',
   },
   menuLabel: {
-    color: '#eaeaea',
+    color: '#283618',
     fontSize: 15,
     fontWeight: '500',
+    fontFamily: 'Jersey20',
   },
 });
 
@@ -183,17 +196,18 @@ function MainTabNavigator() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#16213e',
-          borderTopColor: '#0f3460',
+          backgroundColor: '#fff8ec',
+          borderTopColor: '#c9bda3',
           height: 60,
           paddingBottom: 8,
           paddingTop: 8,
         },
-        tabBarActiveTintColor: '#e94560',
-        tabBarInactiveTintColor: '#888',
+        tabBarActiveTintColor: '#9b1c1c',
+        tabBarInactiveTintColor: '#8c7a5e',
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '600',
+          fontFamily: 'Jersey20',
         },
       }}
     >
@@ -231,7 +245,7 @@ function DrawerNavigator() {
         drawerType: 'slide',
         overlayColor: 'rgba(0,0,0,0.6)',
         drawerStyle: {
-          backgroundColor: '#1a1a2e',
+          backgroundColor: '#fff8dc',
           width: 280,
         },
       }}
@@ -252,8 +266,8 @@ export default function AppNavigator() {
 
   if (loading || (user && profileLoading)) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#1a1a2e' }}>
-        <ActivityIndicator size="large" color="#e94560" />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff8dc' }}>
+        <ActivityIndicator size="large" color="#9b1c1c" />
       </View>
     );
   }

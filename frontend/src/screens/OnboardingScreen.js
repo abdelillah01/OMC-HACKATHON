@@ -312,22 +312,26 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 8,
+    fontFamily: 'Jersey20',
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#eaeaea',
     marginBottom: 6,
+    fontFamily: 'Jersey20',
   },
   subtitle: {
     fontSize: 15,
     color: '#888',
     marginBottom: 24,
+    fontFamily: 'Jersey20',
   },
   error: {
     color: '#ff6b6b',
     marginBottom: 12,
     fontSize: 14,
+    fontFamily: 'Jersey20',
   },
 
   // Buttons
@@ -350,6 +354,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 17,
     fontWeight: '600',
+    fontFamily: 'Jersey20',
   },
 
   // Navigation row
@@ -371,6 +376,7 @@ const styles = StyleSheet.create({
     color: '#aaa',
     fontSize: 17,
     fontWeight: '500',
+    fontFamily: 'Jersey20',
   },
 
   // Gender cards
@@ -399,6 +405,7 @@ const styles = StyleSheet.create({
     color: '#aaa',
     fontSize: 17,
     fontWeight: '600',
+    fontFamily: 'Jersey20',
   },
   genderLabelActive: {
     color: '#eaeaea',
@@ -423,6 +430,7 @@ const styles = StyleSheet.create({
     color: '#aaa',
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: 'Jersey20',
   },
   goalTextActive: {
     color: '#eaeaea',
@@ -450,6 +458,7 @@ const styles = StyleSheet.create({
     color: '#aaa',
     fontSize: 15,
     fontWeight: '500',
+    fontFamily: 'Jersey20',
   },
   chipTextActive: {
     color: '#fff',
@@ -477,6 +486,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 6,
+    fontFamily: 'Jersey20',
   },
   habitTitleActive: {
     color: '#eaeaea',
@@ -488,10 +498,12 @@ const styles = StyleSheet.create({
   habitCategory: {
     color: '#666',
     fontSize: 13,
+    fontFamily: 'Jersey20',
   },
   habitXP: {
     color: '#e94560',
     fontSize: 13,
     fontWeight: '600',
+    fontFamily: 'Jersey20',
   },
 });

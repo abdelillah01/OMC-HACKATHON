@@ -8,12 +8,12 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
 } from 'react-native';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../context/AuthContext';
 import { useUser } from '../context/UserContext';
+import MainLayout from '../components/MainLayout';
 
 export default function EditProfileScreen({ navigation }) {
   const { user } = useAuth();
@@ -39,23 +39,22 @@ export default function EditProfileScreen({ navigation }) {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView contentContainerStyle={styles.scroll}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={styles.backText}>← Back</Text>
-        </TouchableOpacity>
-
-        <Text style={styles.title}>Edit Profile</Text>
-
+      <MainLayout
+        navigation={navigation}
+        title="Edit Profile"
+        showEncouragement={false}
+        showActionGrid={false}
+      >
         <Text style={styles.label}>Display Name</Text>
         <TextInput
           style={styles.input}
           value={name}
           onChangeText={setName}
           placeholder="Your name"
-          placeholderTextColor="#666"
+          placeholderTextColor="#b5a98a"
           maxLength={30}
         />
 
@@ -82,64 +81,45 @@ export default function EditProfileScreen({ navigation }) {
         >
           <Text style={styles.saveBtnText}>{saving ? 'Saving...' : 'Save Changes'}</Text>
         </TouchableOpacity>
-      </ScrollView>
+      </MainLayout>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#1a1a2e',
-  },
-  scroll: {
-    padding: 24,
-    paddingTop: 56,
-  },
-  backBtn: {
-    marginBottom: 20,
-  },
-  backText: {
-    color: '#e94560',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    color: '#eaeaea',
-    marginBottom: 28,
-  },
   label: {
-    color: '#888',
+    color: '#8c7a5e',
     fontSize: 13,
     fontWeight: '600',
     marginBottom: 6,
     marginTop: 16,
+    fontFamily: 'Jersey20',
   },
   input: {
-    backgroundColor: '#16213e',
+    backgroundColor: '#fff8ec',
     borderRadius: 12,
     padding: 14,
-    color: '#eaeaea',
+    color: '#283618',
     fontSize: 16,
-    borderWidth: 1,
-    borderColor: '#0f3460',
+    borderWidth: 1.5,
+    borderColor: '#8c9b6b',
+    fontFamily: 'Jersey20',
   },
   readOnly: {
-    backgroundColor: '#16213e',
+    backgroundColor: '#fff8ec',
     borderRadius: 12,
     padding: 14,
-    borderWidth: 1,
-    borderColor: '#0f3460',
+    borderWidth: 1.5,
+    borderColor: '#8c9b6b',
     opacity: 0.6,
   },
   readOnlyText: {
-    color: '#aaa',
+    color: '#8c7a5e',
     fontSize: 16,
+    fontFamily: 'Jersey20',
   },
   saveBtn: {
-    backgroundColor: '#e94560',
+    backgroundColor: '#9b1c1c',
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
@@ -152,5 +132,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 17,
     fontWeight: '600',
+    fontFamily: 'Jersey20',
   },
 });
