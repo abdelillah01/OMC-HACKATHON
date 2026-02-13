@@ -12,6 +12,8 @@ import {
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { useAuth } from "../context/AuthContext";
+import { INTEREST_CATEGORIES, HABIT_TEMPLATES } from "../utils/constants";
+import { activateHabits } from "../services/habitService";
 
 const { height } = Dimensions.get("window");
 
@@ -20,27 +22,59 @@ export default function OnboardingScreen() {
   const [step, setStep] = useState(0);
   const [gender, setGender] = useState(null);
   const [goal, setGoal] = useState(null);
+  const [selectedInterests, setSelectedInterests] = useState([]);
+  const [selectedHabits, setSelectedHabits] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const handleNext = () => {
     if (step === 0 && !gender) return;
     if (step === 1 && !goal) return;
-    if (step === 1) handleFinish();
+    if (step === 2 && selectedInterests.length === 0) return;
+    if (step === 3 && selectedHabits.length === 0) return;
+
+    if (step === 3) handleFinish();
     else setStep(step + 1);
   };
 
   const handleFinish = async () => {
     setLoading(true);
     try {
+      // 1. Activate selected habits
+      await activateHabits(user.uid, selectedHabits);
+
+      // 2. Update user profile
       await updateDoc(doc(db, "users", user.uid), {
         gender,
         healthGoal: goal,
+        selectedInterests,
         onboardingComplete: true,
+        // Initialize willpower if not already done by constant defaults (handled mostly in aiService now)
       });
     } catch (err) {
       console.log(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const toggleInterest = (interest) => {
+    if (selectedInterests.includes(interest)) {
+      setSelectedInterests(selectedInterests.filter((i) => i !== interest));
+    } else {
+      if (selectedInterests.length < 3) {
+        setSelectedInterests([...selectedInterests, interest]);
+      }
+    }
+  };
+
+  const toggleHabit = (habit) => {
+    const exists = selectedHabits.find((h) => h.id === habit.id);
+    if (exists) {
+      setSelectedHabits(selectedHabits.filter((h) => h.id !== habit.id));
+    } else {
+      if (selectedHabits.length < 3) {
+        setSelectedHabits([...selectedHabits, habit]);
+      }
     }
   };
 
@@ -155,6 +189,84 @@ export default function OnboardingScreen() {
       </ImageBackground>
     );
   }
+  // ─── ÉCRAN 3: INTERESTS ───
+  if (step === 2) {
+    return (
+      <View style={styles.whiteContainer}>
+        <View style={styles.content}>
+          <Text style={styles.pixelTitle}>
+            Pick up to 3 topics{"\n"}you care about
+          </Text>
+          <View style={styles.optionsList}>
+            {INTEREST_CATEGORIES.map((interest) => (
+              <TouchableOpacity
+                key={interest}
+                style={[
+                  styles.optionBtn,
+                  selectedInterests.includes(interest) && styles.optionBtnActive,
+                ]}
+                onPress={() => toggleInterest(interest)}
+              >
+                <Text style={styles.optionBtnText}>
+                  {interest.charAt(0).toUpperCase() + interest.slice(1)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+        <TouchableOpacity style={styles.nextButtonBottom} onPress={handleNext}>
+          <Text style={styles.nextButtonText}>Next</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  // ─── ÉCRAN 4: HABITS ───
+  if (step === 3) {
+    // Filter habits based on selected interests/goals for better relevance?
+    // For now show all matching the selected interests
+    const recommendedHabits = HABIT_TEMPLATES.filter((h) =>
+      selectedInterests.includes(h.category)
+    );
+
+    return (
+      <View style={styles.whiteContainer}>
+        <View style={styles.content}>
+          <Text style={styles.pixelTitle}>
+            Choose 3 starter habits to begin with
+          </Text>
+          <View style={styles.optionsList}>
+            {recommendedHabits.map((habit) => (
+              <TouchableOpacity
+                key={habit.id}
+                style={[
+                  styles.optionBtn,
+                  selectedHabits.find((h) => h.id === habit.id) &&
+                  styles.optionBtnActive,
+                ]}
+                onPress={() => toggleHabit(habit)}
+              >
+                <Text style={styles.optionBtnText}>
+                  {habit.title} ({habit.xpReward} XP)
+                </Text>
+              </TouchableOpacity>
+            ))}
+            {recommendedHabits.length === 0 && (
+              <Text>No habits found for your interests. Try going back and selecting different ones.</Text>
+            )}
+          </View>
+        </View>
+        <TouchableOpacity style={styles.nextButtonBottom} onPress={handleNext}>
+          {loading ? (
+            <ActivityIndicator color="#FFF" />
+          ) : (
+            <Text style={styles.nextButtonText}>Start Journey</Text>
+          )}
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return null;
 }
 

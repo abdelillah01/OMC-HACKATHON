@@ -13,9 +13,11 @@ import {
 import { useAuth } from "../context/AuthContext";
 import { useUser } from "../context/UserContext";
 import { getTodayCheck } from "../services/dailyCheckService";
-import { getUserHabits, getTodayCompletions } from "../services/habitService";
+import { getUserHabits, getTodayCompletions, completeHabit, activateHabits, deleteUserHabit } from "../services/habitService";
+import { updateWillpower, analyzeUserState, getSuggestions } from "../services/aiService";
 import WeeklyXPChart from "../components/WeeklyXPChart";
-import { DAILY_CHECKS } from "../utils/constants";
+import AISuggestionModal from "../components/AISuggestionModal";
+import { DAILY_CHECKS, HABIT_TEMPLATES } from "../utils/constants";
 
 const { width } = Dimensions.get("window");
 
@@ -24,7 +26,13 @@ export default function DashboardScreen({ navigation }) {
   const { profile } = useUser();
   const [refreshing, setRefreshing] = useState(false);
   const [dailyCheckData, setDailyCheckData] = useState(null);
+  const [userHabits, setUserHabits] = useState([]);
+  const [completedHabits, setCompletedHabits] = useState({});
   const [loading, setLoading] = useState(true);
+
+  // AI Modal State
+  const [suggestionModalVisible, setSuggestionModalVisible] = useState(false);
+  const [currentSuggestion, setCurrentSuggestion] = useState(null);
 
   // Charger les vraies données depuis Firebase
   const loadData = useCallback(async () => {
@@ -32,7 +40,13 @@ export default function DashboardScreen({ navigation }) {
     try {
       const checkData = await getTodayCheck(user.uid);
       setDailyCheckData(checkData);
-      // Ici tu peux aussi charger tes habitudes si besoin
+
+      const habits = await getUserHabits(user.uid);
+      setUserHabits(habits);
+
+      const completed = await getTodayCompletions(user.uid);
+      setCompletedHabits(completed);
+
     } catch (err) {
       console.error("Erreur chargement données:", err);
     } finally {
@@ -43,6 +57,59 @@ export default function DashboardScreen({ navigation }) {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  const handleHabitComplete = async (habit) => {
+    if (completedHabits[habit.habitId || habit.id]) return;
+
+    try {
+      // 1. Mark as complete
+      await completeHabit(user.uid, habit.habitId || habit.id, habit.xpReward);
+
+      // Update local state immediately for UI responsiveness
+      setCompletedHabits(prev => ({ ...prev, [habit.habitId || habit.id]: true }));
+
+      // 2. AI Analysis
+      // We pass 'true' for success.
+      const newWillpower = await updateWillpower(user.uid, habit, true);
+
+      // Analyze with updated state (we simulate the updated user profile for analysis)
+      const virtualUser = { ...profile, willpower: newWillpower };
+      const analysis = analyzeUserState(virtualUser, userHabits);
+
+      if (analysis.action !== 'MAINTAIN') {
+        const suggestions = getSuggestions(analysis, virtualUser, userHabits);
+        if (suggestions && suggestions.length > 0) {
+          setCurrentSuggestion(suggestions[0]); // Pick first suggestion
+          setSuggestionModalVisible(true);
+        }
+      }
+
+    } catch (err) {
+      console.error("Completion error:", err);
+    }
+  };
+
+  const handleAcceptSuggestion = async () => {
+    if (!currentSuggestion) return;
+    setLoading(true);
+    setSuggestionModalVisible(false);
+
+    try {
+      if (currentSuggestion.type === 'REPLACE') {
+        await deleteUserHabit(currentSuggestion.remove.id);
+        await activateHabits(user.uid, [currentSuggestion.add]);
+      } else if (currentSuggestion.type === 'ADD') {
+        await activateHabits(user.uid, [currentSuggestion.add]);
+      }
+
+      await loadData(); // Reload to show changes
+      alert("Plan updated! Good luck!");
+    } catch (err) {
+      console.error("Error applying suggestion:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -95,13 +162,44 @@ export default function DashboardScreen({ navigation }) {
         {/* CARTE DE PROGRESSION HEBDOMADAIRE (Vrai composant Chart) */}
         <View style={styles.chartCard}>
           <View style={styles.chartHeader}>
-            <Text style={styles.dateText}>📅 Monday, October 28</Text>
-            <Text style={styles.flowerText}>🌹 2</Text>
+            <Text style={styles.dateText}>📅 {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</Text>
+            <Text style={styles.flowerText}>Willpower: {profile?.willpower || 50} 🔋</Text>
           </View>
           <Text style={styles.chartTitle}>weekly health progress</Text>
           <View style={styles.chartWrapper}>
             <WeeklyXPChart userId={user?.uid} />
           </View>
+        </View>
+
+        {/* SECTION: MY HABITS */}
+        <View style={{ marginTop: 25 }}>
+          <Text style={styles.mainTitle}>My Goals</Text>
+          {userHabits.length === 0 ? (
+            <Text style={{ textAlign: 'center', color: '#666' }}>No habits yet. Restart onboarding?</Text>
+          ) : (
+            userHabits.map((habit) => {
+              const isDone = completedHabits[habit.habitId || habit.id];
+              return (
+                <TouchableOpacity
+                  key={habit.id}
+                  style={[styles.habitRow, isDone && styles.habitRowDone]}
+                  onPress={() => !isDone && handleHabitComplete(habit)}
+                >
+                  <View style={styles.habitContent}>
+                    <Text style={[styles.habitTitleText, isDone && { textDecorationLine: 'line-through', color: '#888' }]}>
+                      {habit.title}
+                    </Text>
+                    <Text style={styles.habitSubText}>
+                      {habit.category} • {habit.xpReward} XP • Lvl {habit.difficultyScore || '?'}
+                    </Text>
+                  </View>
+                  <View style={[styles.checkBox, isDone && styles.checkBoxDone]}>
+                    {isDone && <Text style={{ color: '#fff' }}>✓</Text>}
+                  </View>
+                </TouchableOpacity>
+              );
+            })
+          )}
         </View>
 
         {/* PERSONNAGE CENTRAL (Utilise trainer.png de ton dossier assets) */}
@@ -133,12 +231,19 @@ export default function DashboardScreen({ navigation }) {
 
           <TouchableOpacity
             style={styles.gridItemPlus}
-            onPress={() => navigation.navigate("AddHabit")}
+            onPress={() => navigation.navigate("AddHabit")} // You need to implement AddHabitScreen or just show a list
           >
             <Text style={styles.plusIcon}>+</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      <AISuggestionModal
+        visible={suggestionModalVisible}
+        suggestion={currentSuggestion}
+        onClose={() => setSuggestionModalVisible(false)}
+        onAccept={handleAcceptSuggestion}
+      />
     </View>
   );
 }
@@ -249,4 +354,49 @@ const styles = StyleSheet.create({
     color: "#000",
   },
   plusIcon: { fontSize: 30, color: "#ccc" },
+
+  // Habit Row Styles
+  habitRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 15,
+    padding: 15,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    elevation: 2,
+  },
+  habitRowDone: {
+    backgroundColor: '#f2f3e8',
+    borderColor: '#dcdcdc',
+    opacity: 0.8,
+  },
+  habitContent: {
+    flex: 1,
+  },
+  habitTitleText: {
+    fontFamily: 'Jersey20',
+    fontSize: 20,
+    color: '#000',
+  },
+  habitSubText: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 2,
+    textTransform: 'capitalize',
+  },
+  checkBox: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#283618',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 10,
+  },
+  checkBoxDone: {
+    backgroundColor: '#283618',
+  },
 });

@@ -2,6 +2,7 @@ import {
   collection,
   doc,
   setDoc,
+  deleteDoc,
   getDocs,
   addDoc,
   query,
@@ -58,6 +59,15 @@ export const activateHabits = async (userId, habits) => {
     })
   );
   await Promise.all(promises);
+};
+
+
+
+/**
+ * Delete a user habit (for replacement or removal)
+ */
+export const deleteUserHabit = async (userHabitId) => {
+  await deleteDoc(doc(db, 'userHabits', userHabitId));
 };
 
 /**

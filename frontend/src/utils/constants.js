@@ -36,29 +36,29 @@ export const INTEREST_CATEGORIES = [
 // Predefined habit templates to seed in Firestore
 export const HABIT_TEMPLATES = [
   // Nutrition
-  { id: 'habit_1', title: 'Eat a serving of fruit', category: 'nutrition', difficulty: 'easy', xpReward: 20 },
-  { id: 'habit_2', title: 'Eat a home-cooked meal', category: 'nutrition', difficulty: 'easy', xpReward: 25 },
-  { id: 'habit_3', title: 'Track all meals for the day', category: 'nutrition', difficulty: 'intermediate', xpReward: 40 },
+  { id: 'habit_1', title: 'Eat a serving of fruit', category: 'nutrition', difficulty: 'easy', difficultyScore: 2, xpReward: 20 },
+  { id: 'habit_2', title: 'Eat a home-cooked meal', category: 'nutrition', difficulty: 'easy', difficultyScore: 3, xpReward: 25 },
+  { id: 'habit_3', title: 'Track all meals for the day', category: 'nutrition', difficulty: 'intermediate', difficultyScore: 6, xpReward: 40 },
 
   // Hydration
-  { id: 'habit_4', title: 'Drink 4 glasses of water', category: 'hydration', difficulty: 'easy', xpReward: 15 },
-  { id: 'habit_5', title: 'Drink 8 glasses of water', category: 'hydration', difficulty: 'intermediate', xpReward: 35 },
-  { id: 'habit_6', title: 'Replace one soda with water', category: 'hydration', difficulty: 'easy', xpReward: 20 },
+  { id: 'habit_4', title: 'Drink 4 glasses of water', category: 'hydration', difficulty: 'easy', difficultyScore: 2, xpReward: 15 },
+  { id: 'habit_5', title: 'Drink 8 glasses of water', category: 'hydration', difficulty: 'intermediate', difficultyScore: 5, xpReward: 35 },
+  { id: 'habit_6', title: 'Replace one soda with water', category: 'hydration', difficulty: 'easy', difficultyScore: 3, xpReward: 20 },
 
   // Sleep
-  { id: 'habit_7', title: 'Go to bed before midnight', category: 'sleep', difficulty: 'easy', xpReward: 20 },
-  { id: 'habit_8', title: 'No screens 30 min before bed', category: 'sleep', difficulty: 'intermediate', xpReward: 35 },
-  { id: 'habit_9', title: 'Get 7+ hours of sleep', category: 'sleep', difficulty: 'easy', xpReward: 25 },
+  { id: 'habit_7', title: 'Go to bed before midnight', category: 'sleep', difficulty: 'easy', difficultyScore: 3, xpReward: 20 },
+  { id: 'habit_8', title: 'No screens 30 min before bed', category: 'sleep', difficulty: 'intermediate', difficultyScore: 5, xpReward: 35 },
+  { id: 'habit_9', title: 'Get 7+ hours of sleep', category: 'sleep', difficulty: 'easy', difficultyScore: 4, xpReward: 25 },
 
   // Fitness
-  { id: 'habit_10', title: 'Take a 15-minute walk', category: 'fitness', difficulty: 'easy', xpReward: 20 },
-  { id: 'habit_11', title: 'Do 10 push-ups', category: 'fitness', difficulty: 'easy', xpReward: 15 },
-  { id: 'habit_12', title: 'Complete a 30-min workout', category: 'fitness', difficulty: 'intermediate', xpReward: 45 },
+  { id: 'habit_10', title: 'Take a 15-minute walk', category: 'fitness', difficulty: 'easy', difficultyScore: 2, xpReward: 20 },
+  { id: 'habit_11', title: 'Do 10 push-ups', category: 'fitness', difficulty: 'easy', difficultyScore: 3, xpReward: 15 },
+  { id: 'habit_12', title: 'Complete a 30-min workout', category: 'fitness', difficulty: 'intermediate', difficultyScore: 7, xpReward: 45 },
 
   // Mental Health
-  { id: 'habit_13', title: 'Meditate for 5 minutes', category: 'mental health', difficulty: 'easy', xpReward: 20 },
-  { id: 'habit_14', title: 'Write 3 things you are grateful for', category: 'mental health', difficulty: 'easy', xpReward: 20 },
-  { id: 'habit_15', title: 'Journal for 10 minutes', category: 'mental health', difficulty: 'intermediate', xpReward: 35 },
+  { id: 'habit_13', title: 'Meditate for 5 minutes', category: 'mental health', difficulty: 'easy', difficultyScore: 2, xpReward: 20 },
+  { id: 'habit_14', title: 'Write 3 things you are grateful for', category: 'mental health', difficulty: 'easy', difficultyScore: 2, xpReward: 20 },
+  { id: 'habit_15', title: 'Journal for 10 minutes', category: 'mental health', difficulty: 'intermediate', difficultyScore: 5, xpReward: 35 },
 ];
 
 // Motivational messages shown after completing habits
@@ -92,4 +92,6 @@ export const DEFAULT_USER_PROFILE = {
   lastCompletionDate: null,
   avatarStage: 1,
   onboardingComplete: false,
+  willpower: 50, // Internal metric (0-100)
+  consistencyHistory: [], // Track daily completion rates
 };
