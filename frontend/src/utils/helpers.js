@@ -20,9 +20,12 @@ export const getXPProgress = (xp) => {
  * Stage 1: levels 1-2, Stage 2: levels 3-4, Stage 3: levels 5-6, Stage 4: levels 7+
  */
 export const getAvatarStage = (level) => {
-  if (level >= 7) return 4;
-  if (level >= 5) return 3;
-  if (level >= 3) return 2;
+  if (level >= 19) return 7;
+  if (level >= 16) return 6;
+  if (level >= 13) return 5;
+  if (level >= 10) return 4;
+  if (level >= 7) return 3;
+  if (level >= 4) return 2;
   return 1;
 };
 

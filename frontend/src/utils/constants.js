@@ -1,16 +1,19 @@
-// Avatar evolution stages
+// Avatar evolution stages (male — each stage covers 3 levels)
 export const AVATAR_STAGES = {
-  1: { name: 'Villager', image: require('../assets/avatars/villager.png') },
-  2: { name: 'Equipped Villager', image: require('../assets/avatars/equipped-villager.png') },
-  3: { name: 'Warrior', image: require('../assets/avatars/warrior.png') },
-  4: { name: 'Knight', image: require('../assets/avatars/knight.png') },
+  1: { name: 'Villager', image: require('../assets/levels-male/firstlevels.png') },
+  2: { name: 'Apprentice', image: require('../assets/levels-male/secondlevels.png') },
+  3: { name: 'Warrior', image: require('../assets/levels-male/thirdlevels.png') },
+  4: { name: 'Knight', image: require('../assets/levels-male/fourthlevels.png') },
+  5: { name: 'Champion', image: require('../assets/levels-male/fifthlevels.png') },
+  6: { name: 'Hero', image: require('../assets/levels-male/sixthlevels.png') },
+  7: { name: 'Legend', image: require('../assets/levels-male/seventhlevel.png') },
 };
 
 // XP required per level (level = floor(xp / 100) + 1)
 export const XP_PER_LEVEL = 100;
 
 // Max avatar stage
-export const MAX_AVATAR_STAGE = 4;
+export const MAX_AVATAR_STAGE = 7;
 
 // Gender options
 export const GENDERS = ['male', 'female'];
@@ -75,13 +78,14 @@ export const MOTIVATIONAL_MESSAGES = [
 
 // Daily Check types with XP rewards, icons, and questions
 export const DAILY_CHECKS = [
-  { key: 'water', title: 'Water', icon: '💧', xp: 10, question: 'Did you drink enough water today?' },
-  { key: 'movement', title: 'Movement', icon: '🏃', xp: 15, question: 'Did you move your body today?' },
+  { key: 'water', title: 'Water', icon: require('../assets/avatars/water.png'), xp: 10, question: 'Did you drink enough water today?' },
+  { key: 'movement', title: 'Movement', icon: require('../assets/avatars/sport.png'), xp: 15, question: 'Did you move your body today?' },
   { key: 'productivity', title: 'Productivity', icon: '✅', xp: 20, question: 'Were you productive today?' },
-  { key: 'medicine', title: 'Medicine', icon: '💊', xp: 10, question: 'Did you take your medicine today?' },
-  { key: 'sleep', title: 'Sleep', icon: '😴', xp: 10, question: 'Did you get enough sleep?' },
-  { key: 'mood', title: 'Mental State', icon: '🧠', xp: 5, question: 'Are you feeling good mentally?' },
+  { key: 'medicine', title: 'Medicine', icon: require('../assets/avatars/medecines.png'), xp: 10, question: 'Did you take your medicine today?' },
+  { key: 'sleep', title: 'Sleep', icon: require('../assets/avatars/deep-sleep.png'), xp: 10, question: 'Did you get enough sleep?' },
+  { key: 'mood', title: 'Mental State', icon: require('../assets/avatars/how are u feeling.png'), xp: 5, question: 'Are you feeling good mentally?' },
   { key: 'doctor', title: 'Need a Doctor', icon: '🩺', xp: 0, question: 'Do you need to see a doctor?' },
+  { key: 'stretching', title: 'Stretching', icon: require('../assets/avatars/stretch.png'), xp: 10, question: 'Did you stretch today?' },
 ];
 
 // Default user profile values

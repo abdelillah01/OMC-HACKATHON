@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Image, Text, StyleSheet } from 'react-native';
+import { View, Image, StyleSheet } from 'react-native';
 import { AVATAR_STAGES } from '../utils/constants';
 
 export default function Avatar({ stage }) {
@@ -8,7 +8,6 @@ export default function Avatar({ stage }) {
   return (
     <View style={styles.container}>
       <Image source={avatarData.image} style={styles.image} />
-      <Text style={styles.name}>{avatarData.name}</Text>
     </View>
   );
 }
@@ -19,17 +18,11 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   image: {
-    width: 80,
-    height: 80,
+    width: 150,
+    height: 150,
     borderRadius: 40,
-    borderWidth: 3,
-    borderColor: '#9b1c1c',
-    marginBottom: 6,
-  },
-  name: {
-    color: '#8c7a5e',
-    fontSize: 13,
-    fontWeight: '500',
-    fontFamily: 'Jersey20',
+    marginTop: -30,
+    marginBottom: -40,
+  
   },
 });

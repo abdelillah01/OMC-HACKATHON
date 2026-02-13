@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   TouchableOpacity,
   RefreshControl,
@@ -182,7 +183,7 @@ export default function DashboardScreen({ navigation, route }) {
           style={styles.gridCard}
           onPress={() => setShowTasksModal(true)}
         >
-          <Text style={styles.gridCardIcon}>📝</Text>
+          <Image source={require('../assets/avatars/to do list.png')} style={styles.gridCardImage} />
           <Text style={styles.gridCardLabel}>Today's Tasks</Text>
         </TouchableOpacity>
 
@@ -191,7 +192,7 @@ export default function DashboardScreen({ navigation, route }) {
           style={styles.gridCard}
           onPress={() => navigation.getParent()?.navigate('Hospitals')}
         >
-          <Text style={styles.gridCardIcon}>🏥</Text>
+          <Image source={require('../assets/avatars/location.png')} style={styles.gridCardImage} />
           <Text style={styles.gridCardLabel}>Nearby Hospitals</Text>
         </TouchableOpacity>
       </View>
@@ -291,6 +292,12 @@ const styles = StyleSheet.create({
   gridCardIcon: {
     fontSize: 28,
     marginBottom: 6,
+  },
+  gridCardImage: {
+    width: 36,
+    height: 36,
+    marginBottom: 6,
+    resizeMode: 'contain',
   },
   gridCardLabel: {
     color: '#283618',

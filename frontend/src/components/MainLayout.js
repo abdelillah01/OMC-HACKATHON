@@ -2,10 +2,12 @@ import React from 'react';
 import {
   View,
   Text,
+  Image,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
+import { useUser } from '../context/UserContext';
 
 export default function MainLayout({
   navigation,
@@ -17,6 +19,11 @@ export default function MainLayout({
   showActionGrid = true,
   overlays,
 }) {
+  const { profile } = useUser();
+  const characterImage = profile?.gender === 'female'
+    ? require('../assets/avatars/female-life.png')
+    : require('../assets/avatars/male-life.png');
+
   const openDrawer = () => {
     let nav = navigation;
     while (nav) {
@@ -62,11 +69,7 @@ export default function MainLayout({
         <Text style={styles.title}>{title}</Text>
 
         <View style={styles.characterStrip}>
-          <Text style={styles.characterEmoji}>🧙</Text>
-          <Text style={styles.characterEmoji}>🧝</Text>
-          <Text style={styles.characterEmoji}>🧑‍🌾</Text>
-          <Text style={styles.characterEmoji}>🏰</Text>
-          <Text style={styles.characterEmoji}>⚔️</Text>
+          <Image source={characterImage} style={styles.characterImage} />
         </View>
 
         {children}
@@ -148,11 +151,17 @@ const styles = StyleSheet.create({
   characterStrip: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: 20,
-    gap: 12,
+    marginBottom: 0,
   },
   characterEmoji: {
     fontSize: 28,
+  },
+  characterImage: {
+    width: 400,
+    height: 400,
+    resizeMode: 'contain',
+    marginTop: -100,
+    marginBottom: -140,
   },
   encouragement: {
     alignItems: 'center',
@@ -190,6 +199,7 @@ const styles = StyleSheet.create({
   actionEmoji: {
     fontSize: 32,
     marginBottom: 8,
+    fontFamily: 'Jersey20',
   },
   actionLabel: {
     fontSize: 14,

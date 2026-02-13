@@ -1,8 +1,9 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { TouchableOpacity, Text, Image, StyleSheet } from 'react-native';
 
 export default function DailyCheckCard({ check, answered, onPress }) {
   const done = answered === true || answered === false;
+  const isImage = typeof check.icon !== 'string';
 
   return (
     <TouchableOpacity
@@ -11,7 +12,11 @@ export default function DailyCheckCard({ check, answered, onPress }) {
       onPress={onPress}
       disabled={done}
     >
-      <Text style={styles.icon}>{check.icon}</Text>
+      {isImage ? (
+        <Image source={check.icon} style={styles.iconImage} />
+      ) : (
+        <Text style={styles.icon}>{check.icon}</Text>
+      )}
       <Text style={[styles.title, done && styles.titleDone]}>{check.title}</Text>
       {done && <Text style={styles.checkmark}>✓</Text>}
     </TouchableOpacity>
@@ -39,6 +44,12 @@ const styles = StyleSheet.create({
   icon: {
     fontSize: 28,
     marginBottom: 6,
+  },
+  iconImage: {
+    width: 36,
+    height: 36,
+    marginBottom: 6,
+    resizeMode: 'contain',
   },
   title: {
     color: '#283618',
