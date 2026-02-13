@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -6,29 +6,37 @@ import {
   StyleSheet,
   TouchableOpacity,
   RefreshControl,
-} from 'react-native';
-import { useAuth } from '../context/AuthContext';
-import { useUser } from '../context/UserContext';
-import { getUserHabits, completeHabit, getTodayCompletions } from '../services/habitService';
-import { awardXP } from '../services/gamificationService';
-import { updateStreak } from '../services/streakService';
-import { getTodayCheck, submitCheck } from '../services/dailyCheckService';
-import { randomPick } from '../utils/helpers';
-import { MOTIVATIONAL_MESSAGES, DAILY_CHECKS } from '../utils/constants';
-import MainLayout from '../components/MainLayout';
-import Avatar from '../components/Avatar';
-import XPBar from '../components/XPBar';
-import StreakBadge from '../components/StreakBadge';
-import HabitCard from '../components/HabitCard';
-import CelebrationModal from '../components/CelebrationModal';
-import XPPopup from '../components/XPPopup';
-import WeeklyXPChart from '../components/WeeklyXPChart';
-import DailyCheckCard from '../components/DailyCheckCard';
-import DailyCheckModal from '../components/DailyCheckModal';
-import TasksModal from '../components/TasksModal';
-import HabitManagerModal from '../components/HabitManagerModal';
-import PlanSuggestionModal from '../components/PlanSuggestionModal';
-import { evaluatePlan, applySuggestion, dismissSuggestion } from '../services/willpowerService';
+} from "react-native";
+import { useAuth } from "../context/AuthContext";
+import { useUser } from "../context/UserContext";
+import {
+  getUserHabits,
+  completeHabit,
+  getTodayCompletions,
+} from "../services/habitService";
+import { awardXP } from "../services/gamificationService";
+import { updateStreak } from "../services/streakService";
+import { getTodayCheck, submitCheck } from "../services/dailyCheckService";
+import { randomPick } from "../utils/helpers";
+import { MOTIVATIONAL_MESSAGES, DAILY_CHECKS } from "../utils/constants";
+import MainLayout from "../components/MainLayout";
+import Avatar from "../components/Avatar";
+import XPBar from "../components/XPBar";
+import StreakBadge from "../components/StreakBadge";
+import HabitCard from "../components/HabitCard";
+import CelebrationModal from "../components/CelebrationModal";
+import XPPopup from "../components/XPPopup";
+import WeeklyXPChart from "../components/WeeklyXPChart";
+import DailyCheckCard from "../components/DailyCheckCard";
+import DailyCheckModal from "../components/DailyCheckModal";
+import TasksModal from "../components/TasksModal";
+import HabitManagerModal from "../components/HabitManagerModal";
+import PlanSuggestionModal from "../components/PlanSuggestionModal";
+import {
+  evaluatePlan,
+  applySuggestion,
+  dismissSuggestion,
+} from "../services/willpowerService";
 
 export default function DashboardScreen({ navigation, route }) {
   const { user } = useAuth();
@@ -36,7 +44,7 @@ export default function DashboardScreen({ navigation, route }) {
   const [habits, setHabits] = useState([]);
   const [todayCompletions, setTodayCompletions] = useState({});
   const [refreshing, setRefreshing] = useState(false);
-  const [motivation, setMotivation] = useState('');
+  const [motivation, setMotivation] = useState("");
 
   const [showCelebration, setShowCelebration] = useState(false);
   const [newLevel, setNewLevel] = useState(null);
@@ -69,13 +77,13 @@ export default function DashboardScreen({ navigation, route }) {
       setHabits(userHabits);
       setTodayCompletions(completedMap);
     } catch (err) {
-      console.error('Failed to load habits:', err);
+      console.error("Failed to load habits:", err);
     }
     try {
       const checkData = await getTodayCheck(user.uid);
       setDailyCheckData(checkData);
     } catch (err) {
-      console.error('Failed to load daily checks:', err);
+      console.error("Failed to load daily checks:", err);
       setDailyCheckData(null);
     }
   }, [user]);
@@ -94,7 +102,12 @@ export default function DashboardScreen({ navigation, route }) {
 
   const handleComplete = async (habit, completedValue) => {
     try {
-      await completeHabit(user.uid, habit.habitId, habit.xpReward, completedValue);
+      await completeHabit(
+        user.uid,
+        habit.habitId,
+        habit.xpReward,
+        completedValue,
+      );
       const result = await awardXP(user.uid, habit.xpReward);
       await updateStreak(user.uid);
 
@@ -118,10 +131,10 @@ export default function DashboardScreen({ navigation, route }) {
           setShowPlanSuggestion(true);
         }
       } catch (evalErr) {
-        console.log('Willpower eval skipped:', evalErr.message);
+        console.log("Willpower eval skipped:", evalErr.message);
       }
     } catch (err) {
-      console.error('Completion error:', err);
+      console.error("Completion error:", err);
     }
   };
 
@@ -162,14 +175,19 @@ export default function DashboardScreen({ navigation, route }) {
     }
   };
 
-  const allDone = habits.length > 0 && habits.every((h) => todayCompletions[h.habitId]);
+  const allDone =
+    habits.length > 0 && habits.every((h) => todayCompletions[h.habitId]);
 
   return (
     <MainLayout
       navigation={navigation}
-      title={`Hello, ${profile?.name || 'Adventurer'}!`}
+      title={`Hello, ${profile?.name || "Adventurer"}!`}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#9b1c1c" />
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor="#9b1c1c"
+        />
       }
       showActionGrid={false}
       showCharacter={true}
@@ -242,11 +260,16 @@ export default function DashboardScreen({ navigation, route }) {
               }}
               disabled={done}
             >
-              <Text style={[styles.gridCardLabel, done && styles.gridCardLabelDone]} numberOfLines={2}>
+              <Text
+                style={[styles.gridCardLabel, done && styles.gridCardLabelDone]}
+                numberOfLines={2}
+              >
                 {habit.title}
               </Text>
               {done && <Text style={styles.gridCardCheck}>✓</Text>}
-              {!done && <Text style={styles.gridCardXP}>+{habit.xpReward} XP</Text>}
+              {!done && (
+                <Text style={styles.gridCardXP}>+{habit.xpReward} XP</Text>
+              )}
             </TouchableOpacity>
           );
         })}
@@ -268,16 +291,22 @@ export default function DashboardScreen({ navigation, route }) {
           style={styles.gridCard}
           onPress={() => setShowTasksModal(true)}
         >
-          <Image source={require('../assets/avatars/to do list.png')} style={styles.gridCardImage} />
+          <Image
+            source={require("../assets/avatars/to do list.png")}
+            style={styles.gridCardImage}
+          />
           <Text style={styles.gridCardLabel}>Today's Tasks</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           activeOpacity={0.6}
           style={styles.gridCard}
-          onPress={() => navigation.getParent()?.navigate('Hospitals')}
+          onPress={() => navigation.getParent()?.navigate("Hospitals")}
         >
-          <Image source={require('../assets/avatars/location.png')} style={styles.gridCardImage} />
+          <Image
+            source={require("../assets/avatars/location.png")}
+            style={styles.gridCardImage}
+          />
           <Text style={styles.gridCardLabel}>Nearby Hospitals</Text>
         </TouchableOpacity>
       </View>
@@ -290,7 +319,7 @@ export default function DashboardScreen({ navigation, route }) {
 
       <TouchableOpacity
         style={styles.historyBtn}
-        onPress={() => navigation.navigate('Progress')}
+        onPress={() => navigation.navigate("Progress")}
       >
         <Text style={styles.historyBtnText}>View Progress</Text>
       </TouchableOpacity>
@@ -346,53 +375,53 @@ export default function DashboardScreen({ navigation, route }) {
 
 const styles = StyleSheet.create({
   streakRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 16,
   },
   level: {
     fontSize: 14,
-    color: '#9b1c1c',
-    fontWeight: '600',
-    fontFamily: 'Jersey20',
+    color: "#9b1c1c",
+    fontWeight: "600",
+    fontFamily: "Jersey20",
   },
   motivation: {
-    color: '#8c7a5e',
+    color: "#8c7a5e",
     fontSize: 14,
-    fontStyle: 'italic',
-    textAlign: 'center',
+    fontStyle: "italic",
+    textAlign: "center",
     marginBottom: 24,
-    fontFamily: 'Jersey20',
+    fontFamily: "Jersey20",
   },
   sectionTitle: {
-    color: '#283618',
+    color: "#283618",
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
     marginBottom: 12,
-    fontFamily: 'Jersey20',
+    fontFamily: "Jersey20",
   },
   checkGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
   },
   gridCard: {
-    width: '48%',
-    backgroundColor: '#fff8ec',
+    width: "48%",
+    backgroundColor: "#fff8ec",
     borderRadius: 14,
     paddingVertical: 16,
     paddingHorizontal: 10,
-    alignItems: 'center',
+    alignItems: "center",
     borderWidth: 1.5,
-    borderColor: '#8c9b6b',
+    borderColor: "#8c9b6b",
     minHeight: 90,
-    justifyContent: 'center',
+    justifyContent: "center",
     marginBottom: 10,
   },
   gridCardDone: {
-    borderColor: '#2ecc71',
-    backgroundColor: '#e8f5e9',
+    borderColor: "#2ecc71",
+    backgroundColor: "#e8f5e9",
   },
   gridCardIcon: {
     fontSize: 28,
@@ -402,105 +431,105 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#9b1c1c',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#9b1c1c",
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 6,
   },
   gridCardInitialText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '700',
-    fontFamily: 'Jersey20',
+    fontWeight: "700",
+    fontFamily: "Jersey20",
   },
   gridCardImage: {
     width: 36,
     height: 36,
     marginBottom: 6,
-    resizeMode: 'contain',
+    resizeMode: "contain",
   },
   gridCardLabel: {
-    color: '#283618',
+    color: "#283618",
     fontSize: 12,
-    fontWeight: '600',
-    textAlign: 'center',
-    fontFamily: 'Jersey20',
+    fontWeight: "600",
+    textAlign: "center",
+    fontFamily: "Jersey20",
   },
   gridCardLabelDone: {
-    color: '#2ecc71',
+    color: "#2ecc71",
   },
   gridCardCheck: {
-    color: '#2ecc71',
+    color: "#2ecc71",
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginTop: 2,
-    fontFamily: 'Jersey20',
+    fontFamily: "Jersey20",
   },
   gridCardXP: {
-    color: '#9b1c1c',
+    color: "#9b1c1c",
     fontSize: 10,
-    fontWeight: '600',
+    fontWeight: "600",
     marginTop: 2,
-    fontFamily: 'Jersey20',
+    fontFamily: "Jersey20",
   },
   addCard: {
-    width: '48%',
-    backgroundColor: '#fff8ec',
+    width: "48%",
+    backgroundColor: "#fff8ec",
     borderRadius: 14,
     paddingVertical: 16,
     paddingHorizontal: 10,
-    alignItems: 'center',
+    alignItems: "center",
     borderWidth: 1.5,
-    borderColor: '#9b1c1c',
-    borderStyle: 'dashed',
+    borderColor: "#9b1c1c",
+    borderStyle: "dashed",
     minHeight: 90,
-    justifyContent: 'center',
+    justifyContent: "center",
     marginBottom: 10,
   },
   addCardPlus: {
     fontSize: 28,
-    color: '#9b1c1c',
-    fontWeight: '700',
+    color: "#9b1c1c",
+    fontWeight: "700",
     marginBottom: 4,
   },
   expandedCard: {
-    width: '100%',
+    width: "100%",
     marginBottom: 10,
   },
   collapseBtn: {
-    alignSelf: 'center',
+    alignSelf: "center",
     paddingVertical: 6,
     paddingHorizontal: 16,
     marginTop: -4,
     marginBottom: 4,
   },
   collapseBtnText: {
-    color: '#8c7a5e',
+    color: "#8c7a5e",
     fontSize: 13,
-    fontFamily: 'Jersey20',
+    fontFamily: "Jersey20",
   },
   allDone: {
-    color: '#2ecc71',
+    color: "#2ecc71",
     fontSize: 15,
-    fontWeight: '600',
-    textAlign: 'center',
+    fontWeight: "600",
+    textAlign: "center",
     marginTop: 8,
     marginBottom: 16,
-    fontFamily: 'Jersey20',
+    fontFamily: "Jersey20",
   },
   historyBtn: {
-    backgroundColor: '#fff8ec',
+    backgroundColor: "#fff8ec",
     borderRadius: 12,
     padding: 14,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 16,
     borderWidth: 1.5,
-    borderColor: '#8c9b6b',
+    borderColor: "#8c9b6b",
   },
   historyBtnText: {
-    color: '#9b1c1c',
+    color: "#9b1c1c",
     fontSize: 16,
-    fontWeight: '600',
-    fontFamily: 'Jersey20',
+    fontWeight: "600",
+    fontFamily: "Jersey20",
   },
 });
