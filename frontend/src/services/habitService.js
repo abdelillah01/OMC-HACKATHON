@@ -4,6 +4,7 @@ import {
   setDoc,
   getDocs,
   addDoc,
+  deleteDoc,
   query,
   where,
   orderBy,
@@ -11,40 +12,54 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { HABIT_TEMPLATES } from '../utils/constants';
+import { HABIT_TEMPLATES, COMMITMENT_LEVELS } from '../utils/constants';
 
 /**
- * Seed predefined habit templates into Firestore (run once)
+ * Seed predefined habit templates into Firestore.
+ * Re-seeds if the count in Firestore differs from HABIT_TEMPLATES.length.
  */
 export const seedHabitTemplates = async () => {
   const habitsRef = collection(db, 'habits');
   const snapshot = await getDocs(habitsRef);
 
-  // Skip if already seeded
-  if (!snapshot.empty) return;
+  // Re-seed if count differs (handles both empty and outdated)
+  if (snapshot.size === HABIT_TEMPLATES.length) return;
 
   const promises = HABIT_TEMPLATES.map((habit) =>
     setDoc(doc(db, 'habits', habit.id), {
       title: habit.title,
       category: habit.category,
+      goals: habit.goals,
       difficulty: habit.difficulty,
       xpReward: habit.xpReward,
+      isQuantitative: habit.isQuantitative,
+      ...(habit.unit && { unit: habit.unit }),
+      ...(habit.targetValue !== undefined && { targetValue: habit.targetValue }),
     })
   );
   await Promise.all(promises);
 };
 
 /**
- * Get recommended habits: easy habits matching user's selected interests
+ * Get recommended habits filtered by selected goals and commitment level.
+ * Returns habits whose goals overlap with selectedGoals AND difficulty <= maxDifficulty,
+ * sorted by difficulty ascending.
  */
-export const getRecommendedHabits = (selectedInterests) => {
-  return HABIT_TEMPLATES.filter(
-    (h) => h.difficulty === 'easy' && selectedInterests.includes(h.category)
-  );
+export const getRecommendedHabits = (selectedGoals, commitmentLevel) => {
+  const level = COMMITMENT_LEVELS.find((l) => l.id === commitmentLevel);
+  const maxDifficulty = level ? level.maxDifficulty : 100;
+
+  return HABIT_TEMPLATES
+    .filter((h) => {
+      const goalOverlap = h.goals.some((g) => selectedGoals.includes(g));
+      return goalOverlap && h.difficulty <= maxDifficulty;
+    })
+    .sort((a, b) => a.difficulty - b.difficulty);
 };
 
 /**
- * Activate selected habits for a user (write to userHabits collection)
+ * Activate selected habits for a user (write to userHabits collection).
+ * Stores quantitative fields (isQuantitative, unit, targetValue) when present.
  */
 export const activateHabits = async (userId, habits) => {
   const promises = habits.map((habit) =>
@@ -54,10 +69,20 @@ export const activateHabits = async (userId, habits) => {
       title: habit.title,
       category: habit.category,
       xpReward: habit.xpReward,
+      isQuantitative: habit.isQuantitative || false,
+      ...(habit.unit && { unit: habit.unit }),
+      ...(habit.targetValue !== undefined && { targetValue: habit.targetValue }),
       activatedAt: serverTimestamp(),
     })
   );
   await Promise.all(promises);
+};
+
+/**
+ * Deactivate (remove) a habit for a user by its userHabits doc ID.
+ */
+export const deactivateHabit = async (docId) => {
+  await deleteDoc(doc(db, 'userHabits', docId));
 };
 
 /**
@@ -73,15 +98,19 @@ export const getUserHabits = async (userId) => {
 };
 
 /**
- * Record a habit completion
+ * Record a habit completion. Accepts optional completedValue for quantitative habits.
  */
-export const completeHabit = async (userId, habitId, xpReward) => {
-  await addDoc(collection(db, 'habitCompletions'), {
+export const completeHabit = async (userId, habitId, xpReward, completedValue) => {
+  const data = {
     userId,
     habitId,
     xpAwarded: xpReward,
     completedAt: serverTimestamp(),
-  });
+  };
+  if (completedValue !== undefined && completedValue !== null) {
+    data.completedValue = completedValue;
+  }
+  await addDoc(collection(db, 'habitCompletions'), data);
 };
 
 /**

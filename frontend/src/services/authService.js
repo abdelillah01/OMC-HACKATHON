@@ -21,6 +21,8 @@ export const signUp = async (email, password, name) => {
     email,
     healthGoal: '',
     selectedInterests: [],
+    selectedGoals: [],
+    commitmentLevel: null,
     createdAt: new Date().toISOString(),
   });
 

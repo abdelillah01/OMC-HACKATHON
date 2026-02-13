@@ -1,10 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet } from 'react-native';
 
 export default function StreakBadge({ streak }) {
   return (
     <View style={styles.container}>
-      <Text style={styles.flame}>🔥</Text>
+      <Image source={require('../assets/fire.png')} style={styles.flame} />
       <Text style={styles.count}>{streak}</Text>
       <Text style={styles.label}>day streak</Text>
     </View>
@@ -23,8 +23,10 @@ const styles = StyleSheet.create({
     borderColor: '#8c9b6b',
   },
   flame: {
-    fontSize: 18,
+    width: 20,
+    height: 20,
     marginRight: 4,
+    resizeMode: 'contain',
   },
   count: {
     color: '#f39c12',

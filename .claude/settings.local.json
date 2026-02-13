@@ -11,7 +11,8 @@
       "Bash(npx expo install:*)",
       "Bash(npx expo start --clear)",
       "Bash(dir:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(copy:*)"
     ]
   }
 }

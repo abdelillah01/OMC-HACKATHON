@@ -29,10 +29,10 @@ const Drawer = createDrawerNavigator();
 // ─── Menu items config ───
 const MENU_ITEMS = [
   { label: 'Home Page', icon: '', route: 'HomeTabs', screen: 'Dashboard' },
-  { label: 'Daily Habit', icon: '', route: 'HomeTabs', screen: 'Progress' },
+  { label: 'View Progress', icon: '', route: 'HomeTabs', screen: 'Progress' },
   { label: 'Today\'s Plan', icon: '', route: 'HomeTabs', screen: 'Dashboard', params: { openTasks: true } },
   { label: 'Edit Profile', icon: '', route: 'EditProfile' },
-  { label: 'See Your Friends', icon: '', route: 'Friends' },
+  { label: 'Leaderboard', icon: '', route: 'Friends' },
   { label: 'Give Us Your Feedback', icon: '', route: 'Feedback' },
   { label: 'Nearby Hospitals', icon: '', route: 'Hospitals' },
 ];
@@ -98,7 +98,6 @@ function CustomDrawerContent(props) {
         style={drawerStyles.menuItem}
         onPress={logOut}
       >
-        <Text style={drawerStyles.menuIcon}>🚪</Text>
         <Text style={[drawerStyles.menuLabel, { color: '#9b1c1c' }]}>Log Out</Text>
       </TouchableOpacity>
     </DrawerContentScrollView>
@@ -196,11 +195,7 @@ function MainTabNavigator() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#fff8ec',
-          borderTopColor: '#c9bda3',
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 8,
+          display: 'none',
         },
         tabBarActiveTintColor: '#9b1c1c',
         tabBarInactiveTintColor: '#8c7a5e',

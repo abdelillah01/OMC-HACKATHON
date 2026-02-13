@@ -1,9 +1,10 @@
 import React from 'react';
 import { View, Image, StyleSheet } from 'react-native';
-import { AVATAR_STAGES } from '../utils/constants';
+import { AVATAR_STAGES, AVATAR_STAGES_FEMALE } from '../utils/constants';
 
-export default function Avatar({ stage }) {
-  const avatarData = AVATAR_STAGES[stage] || AVATAR_STAGES[1];
+export default function Avatar({ stage, gender }) {
+  const stages = gender === 'female' ? AVATAR_STAGES_FEMALE : AVATAR_STAGES;
+  const avatarData = stages[stage] || stages[1];
 
   return (
     <View style={styles.container}>
@@ -23,6 +24,5 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     marginTop: -30,
     marginBottom: -40,
-  
   },
 });

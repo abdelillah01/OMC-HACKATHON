@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  TextInput,
   Image,
   StyleSheet,
   ActivityIndicator,
@@ -10,12 +9,13 @@ import {
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../context/AuthContext';
+import { useUser } from '../context/UserContext';
 import MainLayout from '../components/MainLayout';
 
 export default function FriendsScreen({ navigation }) {
   const { user } = useAuth();
+  const { profile } = useUser();
   const [users, setUsers] = useState([]);
-  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,11 +25,10 @@ export default function FriendsScreen({ navigation }) {
         const snap = await getDocs(collection(db, 'users'));
         const all = snap.docs
           .map((d) => ({ uid: d.id, ...d.data() }))
-          .filter((u) => u.uid !== user?.uid)
-          .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+          .sort((a, b) => (b.xp || 0) - (a.xp || 0));
         if (mounted) setUsers(all);
       } catch (err) {
-        console.error('Failed to load friends:', err);
+        console.error('Failed to load leaderboard:', err);
       } finally {
         if (mounted) setLoading(false);
       }
@@ -38,21 +37,23 @@ export default function FriendsScreen({ navigation }) {
     return () => { mounted = false; };
   }, [user]);
 
-  const filtered = search.trim()
-    ? users.filter((u) =>
-        (u.name || '').toLowerCase().includes(search.trim().toLowerCase())
-      )
-    : users;
+  const myRank = users.findIndex((u) => u.uid === user?.uid) + 1;
 
-  const renderUser = (item) => {
+  const renderUser = (item, index) => {
+    const rank = index + 1;
+    const isMe = item.uid === user?.uid;
     const xp = item.xp || 0;
     const level = item.level || 1;
-    const xpForNextLevel = level * 100;
-    const progressPercent = Math.min((xp / xpForNextLevel) * 100, 100);
 
     return (
-      <View key={item.uid} style={styles.friendCard}>
-        <View style={styles.pixelAvatar}>
+      <View key={item.uid} style={[styles.card, isMe && styles.cardMe, rank <= 3 && styles.cardTop]}>
+        <View style={[styles.rankBadge, rank === 1 && styles.rankGold, rank === 2 && styles.rankSilver, rank === 3 && styles.rankBronze]}>
+          <Text style={[styles.rankText, rank <= 3 && styles.rankTextTop]}>
+            {rank}
+          </Text>
+        </View>
+
+        <View style={styles.avatarWrap}>
           <Image
             source={
               item.gender === 'female'
@@ -62,13 +63,18 @@ export default function FriendsScreen({ navigation }) {
             style={styles.avatarImage}
           />
         </View>
-        <View style={styles.friendInfo}>
-          <Text style={styles.friendName}>{item.name || 'Adventurer'}</Text>
-          <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: `${progressPercent}%` }]} />
-          </View>
+
+        <View style={styles.info}>
+          <Text style={[styles.name, isMe && styles.nameMe]}>
+            {item.name || 'Adventurer'}{isMe ? ' (You)' : ''}
+          </Text>
+          <Text style={styles.levelText}>Level {level}</Text>
         </View>
-        <Text style={styles.rose}></Text>
+
+        <View style={styles.xpWrap}>
+          <Text style={styles.xpValue}>{xp}</Text>
+          <Text style={styles.xpLabel}>XP</Text>
+        </View>
       </View>
     );
   };
@@ -76,102 +82,132 @@ export default function FriendsScreen({ navigation }) {
   return (
     <MainLayout
       navigation={navigation}
-      title="Friends"
+      title="Leaderboard"
       showEncouragement={false}
       showActionGrid={false}
     >
-      <Text style={styles.subtitle}>{users.length} adventurers on the quest</Text>
-
-      <TextInput
-        style={styles.searchInput}
-        placeholder="Search by name..."
-        placeholderTextColor="#b5a98a"
-        value={search}
-        onChangeText={setSearch}
-      />
+      {myRank > 0 && (
+        <View style={styles.myRankBanner}>
+          <Text style={styles.myRankText}>Your Rank: #{myRank} of {users.length}</Text>
+        </View>
+      )}
 
       {loading ? (
         <ActivityIndicator color="#9b1c1c" size="large" style={{ marginTop: 40 }} />
-      ) : filtered.length === 0 ? (
-        <Text style={styles.empty}>
-          {search.trim() ? 'No friends match that name.' : 'No other users yet.'}
-        </Text>
+      ) : users.length === 0 ? (
+        <Text style={styles.empty}>No users yet.</Text>
       ) : (
-        filtered.map(renderUser)
+        users.map(renderUser)
       )}
     </MainLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  subtitle: {
-    fontSize: 13,
-    color: '#8c7a5e',
-    marginBottom: 16,
-    textAlign: 'center',
-    fontFamily: 'Jersey20',
-  },
-  searchInput: {
-    backgroundColor: '#fff8ec',
+  myRankBanner: {
+    backgroundColor: '#9b1c1c',
     borderRadius: 12,
-    paddingHorizontal: 16,
     paddingVertical: 12,
-    color: '#283618',
-    fontSize: 15,
-    borderWidth: 2,
-    borderColor: '#8c9b6b',
+    paddingHorizontal: 16,
     marginBottom: 16,
+    alignItems: 'center',
+  },
+  myRankText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
     fontFamily: 'Jersey20',
   },
-  friendCard: {
+  card: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff8ec',
     borderRadius: 14,
-    padding: 14,
-    marginBottom: 12,
-    borderWidth: 2,
+    padding: 12,
+    marginBottom: 10,
+    borderWidth: 1.5,
     borderColor: '#8c9b6b',
   },
-  pixelAvatar: {
-    width: 44,
-    height: 44,
+  cardMe: {
+    borderColor: '#9b1c1c',
+    backgroundColor: '#fff0d4',
+  },
+  cardTop: {
+    borderWidth: 2,
+  },
+  rankBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#d4c9a8',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  rankGold: {
+    backgroundColor: '#f1c40f',
+  },
+  rankSilver: {
+    backgroundColor: '#bdc3c7',
+  },
+  rankBronze: {
+    backgroundColor: '#cd7f32',
+  },
+  rankText: {
+    color: '#283618',
+    fontSize: 14,
+    fontWeight: '700',
+    fontFamily: 'Jersey20',
+  },
+  rankTextTop: {
+    color: '#fff',
+  },
+  avatarWrap: {
+    width: 40,
+    height: 40,
     borderRadius: 8,
     backgroundColor: '#f2d6b3',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 10,
   },
   avatarImage: {
-    width: 40,
-    height: 40,
+    width: 36,
+    height: 36,
     borderRadius: 8,
     resizeMode: 'cover',
   },
-  friendInfo: {
+  info: {
     flex: 1,
   },
-  friendName: {
+  name: {
     color: '#283618',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
-    marginBottom: 6,
     fontFamily: 'Jersey20',
   },
-  progressBar: {
-    height: 6,
-    backgroundColor: '#f1c0c0',
-    borderRadius: 3,
-    overflow: 'hidden',
+  nameMe: {
+    color: '#9b1c1c',
   },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#9b1c1c',
-    borderRadius: 3,
+  levelText: {
+    color: '#8c7a5e',
+    fontSize: 12,
+    fontFamily: 'Jersey20',
   },
-  rose: {
-    fontSize: 20,
-    marginLeft: 10,
+  xpWrap: {
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  xpValue: {
+    color: '#9b1c1c',
+    fontSize: 18,
+    fontWeight: '700',
+    fontFamily: 'Jersey20',
+  },
+  xpLabel: {
+    color: '#8c7a5e',
+    fontSize: 11,
+    fontFamily: 'Jersey20',
   },
   empty: {
     color: '#8c7a5e',

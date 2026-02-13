@@ -122,7 +122,12 @@ export default function ProgressScreen({ navigation }) {
                 {formatDate(item.completedAt)}
               </Text>
             </View>
-            <Text style={styles.historyXP}>+{item.xpAwarded} XP</Text>
+            <View style={styles.historyRight}>
+              {item.completedValue != null && (
+                <Text style={styles.historyValue}>{item.completedValue}</Text>
+              )}
+              <Text style={styles.historyXP}>+{item.xpAwarded} XP</Text>
+            </View>
           </View>
         ))
       )}
@@ -203,6 +208,15 @@ const styles = StyleSheet.create({
   historyTime: {
     color: '#8c7a5e',
     fontSize: 12,
+    fontFamily: 'Jersey20',
+  },
+  historyRight: {
+    alignItems: 'flex-end',
+  },
+  historyValue: {
+    color: '#8c7a5e',
+    fontSize: 12,
+    marginBottom: 2,
     fontFamily: 'Jersey20',
   },
   historyXP: {

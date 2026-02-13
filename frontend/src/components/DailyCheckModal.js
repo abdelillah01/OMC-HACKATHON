@@ -3,6 +3,7 @@ import {
   Modal,
   View,
   Text,
+  Image,
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
@@ -45,7 +46,11 @@ export default function DailyCheckModal({ visible, check, onSubmit, onClose }) {
       <View style={styles.overlay}>
         {check ? (
           <View style={styles.card}>
-            <Text style={styles.icon}>{check.icon}</Text>
+            {typeof check.icon === 'string' ? (
+              <Text style={styles.icon}>{check.icon}</Text>
+            ) : (
+              <Image source={check.icon} style={styles.iconImage} />
+            )}
             <Text style={styles.question}>{check.question}</Text>
 
             {feedback ? (
@@ -113,6 +118,12 @@ const styles = StyleSheet.create({
   icon: {
     fontSize: 48,
     marginBottom: 16,
+  },
+  iconImage: {
+    width: 56,
+    height: 56,
+    marginBottom: 16,
+    resizeMode: 'contain',
   },
   question: {
     fontSize: 18,

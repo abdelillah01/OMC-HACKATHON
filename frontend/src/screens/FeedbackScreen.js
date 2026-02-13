@@ -3,6 +3,7 @@ import {
   View,
   Text,
   TextInput,
+  Image,
   StyleSheet,
   Alert,
   KeyboardAvoidingView,
@@ -50,18 +51,16 @@ export default function FeedbackScreen({ navigation }) {
         showActionGrid={false}
       >
         <View style={styles.starsSection}>
-          <Text style={styles.starBig}>⭐</Text>
-          <View style={styles.starsRow}>
-            <Text style={styles.starSmall}>⭐</Text>
-            <View style={{ width: 40 }} />
-            <Text style={styles.starSmall}>⭐</Text>
-          </View>
+          <Image
+            source={require('../assets/feedbackstars.png')}
+            style={styles.starsImage}
+          />
         </View>
 
         <View style={styles.textSection}>
-          <Text style={styles.heading}>We're here to help.</Text>
-          <Text style={styles.heading}>Don't forget to give</Text>
-          <Text style={styles.heading}>us your feedback!</Text>
+          <Text style={styles.heading}>
+            We're here to help.{'\n'}Don't forget to give{'\n'}us your feedback!
+          </Text>
         </View>
 
         <View style={styles.bubbleWrapper}>
@@ -89,27 +88,19 @@ export default function FeedbackScreen({ navigation }) {
 const styles = StyleSheet.create({
   starsSection: {
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom: 20,
   },
-  starBig: {
-    fontSize: 60,
-    marginBottom: 6,
-  },
-  starsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  starSmall: {
-    fontSize: 36,
+  starsImage: {
+    width: 300,
+    height: 250,
+    resizeMode: 'contain',
   },
   textSection: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 30,
   },
   heading: {
     fontSize: 20,
-    fontWeight: '700',
     color: '#3b2f1e',
     textAlign: 'center',
     lineHeight: 28,

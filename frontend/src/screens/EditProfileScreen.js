@@ -4,6 +4,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  Image,
   StyleSheet,
   Alert,
   KeyboardAvoidingView,
@@ -48,6 +49,17 @@ export default function EditProfileScreen({ navigation }) {
         showEncouragement={false}
         showActionGrid={false}
       >
+        <View style={styles.avatarSection}>
+          <Image
+            source={
+              profile?.gender === 'female'
+                ? require('../assets/avatars/female_avatar.png')
+                : require('../assets/avatars/male_avatar.png')
+            }
+            style={styles.avatarImage}
+          />
+        </View>
+
         <Text style={styles.label}>Display Name</Text>
         <TextInput
           style={styles.input}
@@ -87,6 +99,16 @@ export default function EditProfileScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+  avatarSection: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  avatarImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    resizeMode: 'cover',
+  },
   label: {
     color: '#8c7a5e',
     fontSize: 13,

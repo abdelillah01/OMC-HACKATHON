@@ -28,7 +28,11 @@ export default function LoginScreen({ navigation }) {
     setError("");
     setLoading(true);
     try {
-      await logIn(email.trim(), password);
+      // If user typed a username (no @), convert to the fake email used at signup
+      const loginEmail = email.trim().includes("@")
+        ? email.trim()
+        : `${email.trim().replace(/\s+/g, "")}@vitalis.com`;
+      await logIn(loginEmail, password);
     } catch (err) {
       setError(err.message);
     } finally {

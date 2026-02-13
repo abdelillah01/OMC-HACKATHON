@@ -6,19 +6,20 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../context/AuthContext';
 import {
   GENDERS,
-  GOALS,
-  INTEREST_CATEGORIES,
-  HABIT_TEMPLATES,
+  HEALTH_GOALS,
+  COMMITMENT_LEVELS,
 } from '../utils/constants';
 import {
   activateHabits,
   seedHabitTemplates,
+  getRecommendedHabits,
 } from '../services/habitService';
 
 const TOTAL_STEPS = 4;
@@ -27,23 +28,23 @@ export default function OnboardingScreen() {
   const { user } = useAuth();
   const [step, setStep] = useState(0);
   const [gender, setGender] = useState(null);
-  const [goal, setGoal] = useState(null);
-  const [interests, setInterests] = useState([]);
+  const [selectedGoals, setSelectedGoals] = useState([]);
+  const [commitmentLevel, setCommitmentLevel] = useState(null);
   const [selectedHabits, setSelectedHabits] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Step 4: filter habits by selected goal, fallback to all if no match
+  // Step 4: filter habits by goals + commitment level
   const filteredHabits = useMemo(() => {
-    const matched = HABIT_TEMPLATES.filter((h) => h.category === goal);
-    return matched.length > 0 ? matched : HABIT_TEMPLATES;
-  }, [goal]);
+    if (selectedGoals.length === 0 || !commitmentLevel) return [];
+    return getRecommendedHabits(selectedGoals, commitmentLevel);
+  }, [selectedGoals, commitmentLevel]);
 
-  const toggleInterest = (interest) => {
-    setInterests((prev) => {
-      if (prev.includes(interest)) return prev.filter((i) => i !== interest);
-      if (prev.length >= 3) return prev; // Max 3
-      return [...prev, interest];
+  const toggleGoal = (goalId) => {
+    setSelectedGoals((prev) => {
+      if (prev.includes(goalId)) return prev.filter((g) => g !== goalId);
+      if (prev.length >= 2) return prev;
+      return [...prev, goalId];
     });
   };
 
@@ -51,7 +52,7 @@ export default function OnboardingScreen() {
     setSelectedHabits((prev) => {
       const exists = prev.find((h) => h.id === habit.id);
       if (exists) return prev.filter((h) => h.id !== habit.id);
-      if (prev.length >= 3) return prev;
+      if (prev.length >= 4) return prev;
       return [...prev, habit];
     });
   };
@@ -65,14 +66,14 @@ export default function OnboardingScreen() {
       }
       setStep(1);
     } else if (step === 1) {
-      if (!goal) {
-        setError('Please select your main goal.');
+      if (selectedGoals.length === 0) {
+        setError('Please select at least one goal.');
         return;
       }
       setStep(2);
     } else if (step === 2) {
-      if (interests.length === 0) {
-        setError('Please select at least one interest.');
+      if (!commitmentLevel) {
+        setError('Please select your commitment level.');
         return;
       }
       setSelectedHabits([]);
@@ -88,8 +89,8 @@ export default function OnboardingScreen() {
   };
 
   const handleFinish = async () => {
-    if (selectedHabits.length !== 3) {
-      setError('Please select exactly 3 habits.');
+    if (selectedHabits.length === 0 || selectedHabits.length > 4) {
+      setError('Please select 1 to 4 habits.');
       return;
     }
     setError('');
@@ -100,10 +101,11 @@ export default function OnboardingScreen() {
 
       await updateDoc(doc(db, 'users', user.uid), {
         gender,
-        goal,
-        interests,
-        selectedInterests: interests,
-        healthGoal: goal,
+        selectedGoals,
+        commitmentLevel,
+        // Legacy fields for backward compatibility
+        healthGoal: selectedGoals[0] || '',
+        selectedInterests: selectedGoals,
         onboardingComplete: true,
       });
     } catch (err) {
@@ -134,9 +136,14 @@ export default function OnboardingScreen() {
                 style={[styles.genderCard, active && styles.genderCardActive]}
                 onPress={() => setGender(g)}
               >
-                <Text style={styles.genderEmoji}>
-                  {g === 'male' ? '🧑' : '👩'}
-                </Text>
+                <Image
+                  source={
+                    g === 'male'
+                      ? require('../assets/avatars/male_avatar.png')
+                      : require('../assets/avatars/female_avatar.png')
+                  }
+                  style={styles.genderImage}
+                />
                 <Text style={[styles.genderLabel, active && styles.genderLabelActive]}>
                   {capitalize(g)}
                 </Text>
@@ -158,72 +165,80 @@ export default function OnboardingScreen() {
     );
   }
 
-  // ─── Step 2: Goal Selection ───
+  // ─── Step 2: Goal Selection (max 2) ───
   if (step === 1) {
     return (
       <View style={styles.container}>
         <Text style={styles.stepLabel}>Step 2 of {TOTAL_STEPS}</Text>
-        <Text style={styles.title}>What's your main goal?</Text>
-        <Text style={styles.subtitle}>Pick the area you want to focus on most</Text>
-
-        {error ? <Text style={styles.error}>{error}</Text> : null}
-
-        <View style={styles.goalList}>
-          {GOALS.map((g) => {
-            const active = goal === g;
-            return (
-              <TouchableOpacity
-                key={g}
-                style={[styles.goalCard, active && styles.goalCardActive]}
-                onPress={() => setGoal(g)}
-              >
-                <Text style={[styles.goalText, active && styles.goalTextActive]}>
-                  {capitalize(g)}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        <View style={styles.navRow}>
-          <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-            <Text style={styles.backText}>Back</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.button, !goal && styles.buttonDisabled]}
-            onPress={handleNext}
-            disabled={!goal}
-          >
-            <Text style={styles.buttonText}>Next</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  }
-
-  // ─── Step 3: Interests Selection (max 3) ───
-  if (step === 2) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.stepLabel}>Step 3 of {TOTAL_STEPS}</Text>
-        <Text style={styles.title}>Pick your interests</Text>
+        <Text style={styles.title}>What are your goals?</Text>
         <Text style={styles.subtitle}>
-          Select up to 3 areas you care about ({interests.length}/3)
+          Pick up to 2 areas to focus on ({selectedGoals.length}/2)
         </Text>
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
-        <View style={styles.chipContainer}>
-          {INTEREST_CATEGORIES.map((interest) => {
-            const active = interests.includes(interest);
+        <View style={styles.goalList}>
+          {HEALTH_GOALS.map((g) => {
+            const active = selectedGoals.includes(g.id);
             return (
               <TouchableOpacity
-                key={interest}
-                style={[styles.chip, active && styles.chipActive]}
-                onPress={() => toggleInterest(interest)}
+                key={g.id}
+                style={[styles.goalCard, active && styles.goalCardActive]}
+                onPress={() => toggleGoal(g.id)}
               >
-                <Text style={[styles.chipText, active && styles.chipTextActive]}>
-                  {capitalize(interest)}
+                <Text style={styles.goalIcon}>{g.icon}</Text>
+                <Text style={[styles.goalText, active && styles.goalTextActive]}>
+                  {g.label}
+                </Text>
+                {active && <Text style={styles.goalCheck}>✓</Text>}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        <View style={styles.navRow}>
+          <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+            <Text style={styles.backText}>Back</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, selectedGoals.length === 0 && styles.buttonDisabled]}
+            onPress={handleNext}
+            disabled={selectedGoals.length === 0}
+          >
+            <Text style={styles.buttonText}>Next</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  // ─── Step 3: Commitment Level ───
+  if (step === 2) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.stepLabel}>Step 3 of {TOTAL_STEPS}</Text>
+        <Text style={styles.title}>How committed are you?</Text>
+        <Text style={styles.subtitle}>Pick your pace — you can always change later</Text>
+
+        {error ? <Text style={styles.error}>{error}</Text> : null}
+
+        <View style={styles.commitList}>
+          {COMMITMENT_LEVELS.map((level) => {
+            const active = commitmentLevel === level.id;
+            return (
+              <TouchableOpacity
+                key={level.id}
+                style={[styles.commitCard, active && styles.commitCardActive]}
+                onPress={() => setCommitmentLevel(level.id)}
+              >
+                <View style={styles.commitHeader}>
+                  <Text style={[styles.commitLabel, active && styles.commitLabelActive]}>
+                    {level.label}
+                  </Text>
+                  {active && <Text style={styles.commitCheck}>✓</Text>}
+                </View>
+                <Text style={[styles.commitDesc, active && styles.commitDescActive]}>
+                  {level.description}
                 </Text>
               </TouchableOpacity>
             );
@@ -235,9 +250,9 @@ export default function OnboardingScreen() {
             <Text style={styles.backText}>Back</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.button, interests.length === 0 && styles.buttonDisabled]}
+            style={[styles.button, !commitmentLevel && styles.buttonDisabled]}
             onPress={handleNext}
-            disabled={interests.length === 0}
+            disabled={!commitmentLevel}
           >
             <Text style={styles.buttonText}>Next</Text>
           </TouchableOpacity>
@@ -246,13 +261,13 @@ export default function OnboardingScreen() {
     );
   }
 
-  // ─── Step 4: Habit Selection ───
+  // ─── Step 4: Habit Selection (max 4) ───
   return (
     <View style={styles.container}>
       <Text style={styles.stepLabel}>Step 4 of {TOTAL_STEPS}</Text>
-      <Text style={styles.title}>Choose 3 habits</Text>
+      <Text style={styles.title}>Choose your habits</Text>
       <Text style={styles.subtitle}>
-        Pick the habits you want to start with ({selectedHabits.length}/3)
+        Pick up to 4 habits to start with ({selectedHabits.length}/4)
       </Text>
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -266,18 +281,30 @@ export default function OnboardingScreen() {
               style={[styles.habitCard, active && styles.habitCardActive]}
               onPress={() => toggleHabit(habit)}
             >
-              <Text style={[styles.habitTitle, active && styles.habitTitleActive]}>
-                {habit.title}
-              </Text>
-              <View style={styles.habitMeta}>
-                <Text style={styles.habitCategory}>
-                  {capitalize(habit.category)}
+              <View style={styles.habitTop}>
+                <Text style={[styles.habitTitle, active && styles.habitTitleActive]}>
+                  {habit.title}
                 </Text>
+                {active && <Text style={styles.habitCheck}>✓</Text>}
+              </View>
+              <View style={styles.habitMeta}>
+                <Text style={styles.habitCategory}>{habit.category}</Text>
+                <Text style={styles.habitDifficulty}>Difficulty: {habit.difficulty}</Text>
                 <Text style={styles.habitXP}>+{habit.xpReward} XP</Text>
               </View>
+              {habit.isQuantitative && habit.targetValue && (
+                <Text style={styles.habitTarget}>
+                  Target: {habit.targetValue} {habit.unit}
+                </Text>
+              )}
             </TouchableOpacity>
           );
         })}
+        {filteredHabits.length === 0 && (
+          <Text style={styles.emptyText}>
+            No habits match your goals and commitment level. Try going back and adjusting.
+          </Text>
+        )}
       </ScrollView>
 
       <View style={styles.navRow}>
@@ -285,9 +312,9 @@ export default function OnboardingScreen() {
           <Text style={styles.backText}>Back</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.button, selectedHabits.length !== 3 && styles.buttonDisabled]}
+          style={[styles.button, selectedHabits.length === 0 && styles.buttonDisabled]}
           onPress={handleFinish}
-          disabled={loading || selectedHabits.length !== 3}
+          disabled={loading || selectedHabits.length === 0}
         >
           {loading ? (
             <ActivityIndicator color="#fff" />
@@ -303,12 +330,12 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a2e',
+    backgroundColor: '#fff8dc',
     paddingHorizontal: 24,
     paddingTop: 60,
   },
   stepLabel: {
-    color: '#e94560',
+    color: '#9b1c1c',
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 8,
@@ -317,13 +344,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#eaeaea',
+    color: '#283618',
     marginBottom: 6,
     fontFamily: 'Jersey20',
   },
   subtitle: {
     fontSize: 15,
-    color: '#888',
+    color: '#8c7a5e',
     marginBottom: 24,
     fontFamily: 'Jersey20',
   },
@@ -333,10 +360,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Jersey20',
   },
+  emptyText: {
+    color: '#8c7a5e',
+    fontSize: 14,
+    textAlign: 'center',
+    marginTop: 40,
+    fontFamily: 'Jersey20',
+  },
 
   // Buttons
   button: {
-    backgroundColor: '#e94560',
+    backgroundColor: '#9b1c1c',
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 32,
@@ -370,10 +404,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#0f3460',
+    borderColor: '#8c9b6b',
   },
   backText: {
-    color: '#aaa',
+    color: '#8c7a5e',
     fontSize: 17,
     fontWeight: '500',
     fontFamily: 'Jersey20',
@@ -386,29 +420,31 @@ const styles = StyleSheet.create({
   },
   genderCard: {
     flex: 1,
-    backgroundColor: '#16213e',
+    backgroundColor: '#fff8ec',
     borderRadius: 16,
     paddingVertical: 28,
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#0f3460',
+    borderColor: '#8c9b6b',
   },
   genderCardActive: {
-    borderColor: '#e94560',
-    backgroundColor: '#1e2a4a',
+    borderColor: '#9b1c1c',
+    backgroundColor: '#fff0d4',
   },
-  genderEmoji: {
-    fontSize: 40,
+  genderImage: {
+    width: 64,
+    height: 64,
     marginBottom: 10,
+    resizeMode: 'contain',
   },
   genderLabel: {
-    color: '#aaa',
+    color: '#8c7a5e',
     fontSize: 17,
     fontWeight: '600',
     fontFamily: 'Jersey20',
   },
   genderLabelActive: {
-    color: '#eaeaea',
+    color: '#283618',
   },
 
   // Goal cards
@@ -416,52 +452,80 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   goalCard: {
-    backgroundColor: '#16213e',
+    backgroundColor: '#fff8ec',
     borderRadius: 12,
     padding: 16,
     borderWidth: 1.5,
-    borderColor: '#0f3460',
+    borderColor: '#8c9b6b',
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   goalCardActive: {
-    borderColor: '#e94560',
-    backgroundColor: '#1e2a4a',
+    borderColor: '#9b1c1c',
+    backgroundColor: '#fff0d4',
+  },
+  goalIcon: {
+    fontSize: 24,
+    marginRight: 12,
   },
   goalText: {
-    color: '#aaa',
+    color: '#8c7a5e',
     fontSize: 16,
     fontWeight: '600',
+    flex: 1,
     fontFamily: 'Jersey20',
   },
   goalTextActive: {
-    color: '#eaeaea',
+    color: '#283618',
+  },
+  goalCheck: {
+    color: '#9b1c1c',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 
-  // Interest chips
-  chipContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  // Commitment cards
+  commitList: {
     gap: 10,
   },
-  chip: {
-    backgroundColor: '#16213e',
-    borderRadius: 20,
-    paddingVertical: 10,
-    paddingHorizontal: 18,
-    borderWidth: 1,
-    borderColor: '#0f3460',
+  commitCard: {
+    backgroundColor: '#fff8ec',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1.5,
+    borderColor: '#8c9b6b',
   },
-  chipActive: {
-    backgroundColor: '#e94560',
-    borderColor: '#e94560',
+  commitCardActive: {
+    borderColor: '#9b1c1c',
+    backgroundColor: '#fff0d4',
   },
-  chipText: {
-    color: '#aaa',
-    fontSize: 15,
-    fontWeight: '500',
+  commitHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  commitLabel: {
+    color: '#8c7a5e',
+    fontSize: 17,
+    fontWeight: '700',
     fontFamily: 'Jersey20',
   },
-  chipTextActive: {
-    color: '#fff',
+  commitLabelActive: {
+    color: '#283618',
+  },
+  commitCheck: {
+    color: '#9b1c1c',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  commitDesc: {
+    color: '#a89880',
+    fontSize: 13,
+    fontFamily: 'Jersey20',
+  },
+  commitDescActive: {
+    color: '#8c7a5e',
   },
 
   // Habit cards
@@ -470,40 +534,64 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   habitCard: {
-    backgroundColor: '#16213e',
+    backgroundColor: '#fff8ec',
     borderRadius: 12,
     padding: 16,
     marginBottom: 10,
     borderWidth: 1.5,
-    borderColor: '#0f3460',
+    borderColor: '#8c9b6b',
   },
   habitCardActive: {
-    borderColor: '#e94560',
-    backgroundColor: '#1e2a4a',
+    borderColor: '#9b1c1c',
+    backgroundColor: '#fff0d4',
+  },
+  habitTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
   },
   habitTitle: {
-    color: '#ccc',
+    color: '#555',
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 6,
+    flex: 1,
     fontFamily: 'Jersey20',
   },
   habitTitleActive: {
-    color: '#eaeaea',
+    color: '#283618',
+  },
+  habitCheck: {
+    color: '#9b1c1c',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginLeft: 8,
   },
   habitMeta: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
   habitCategory: {
-    color: '#666',
-    fontSize: 13,
+    color: '#8c7a5e',
+    fontSize: 12,
+    fontFamily: 'Jersey20',
+  },
+  habitDifficulty: {
+    color: '#8c7a5e',
+    fontSize: 12,
     fontFamily: 'Jersey20',
   },
   habitXP: {
-    color: '#e94560',
-    fontSize: 13,
+    color: '#9b1c1c',
+    fontSize: 12,
     fontWeight: '600',
+    fontFamily: 'Jersey20',
+  },
+  habitTarget: {
+    color: '#8c7a5e',
+    fontSize: 12,
+    marginTop: 4,
+    fontStyle: 'italic',
     fontFamily: 'Jersey20',
   },
 });

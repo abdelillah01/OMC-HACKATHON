@@ -26,6 +26,7 @@ import WeeklyXPChart from '../components/WeeklyXPChart';
 import DailyCheckCard from '../components/DailyCheckCard';
 import DailyCheckModal from '../components/DailyCheckModal';
 import TasksModal from '../components/TasksModal';
+import HabitManagerModal from '../components/HabitManagerModal';
 
 export default function DashboardScreen({ navigation, route }) {
   const { user } = useAuth();
@@ -43,6 +44,8 @@ export default function DashboardScreen({ navigation, route }) {
   const [selectedCheck, setSelectedCheck] = useState(null);
 
   const [showTasksModal, setShowTasksModal] = useState(false);
+  const [showHabitManager, setShowHabitManager] = useState(false);
+  const [expandedHabit, setExpandedHabit] = useState(null);
 
   useEffect(() => {
     if (route.params?.openTasks) {
@@ -84,9 +87,9 @@ export default function DashboardScreen({ navigation, route }) {
     setRefreshing(false);
   };
 
-  const handleComplete = async (habit) => {
+  const handleComplete = async (habit, completedValue) => {
     try {
-      await completeHabit(user.uid, habit.habitId, habit.xpReward);
+      await completeHabit(user.uid, habit.habitId, habit.xpReward, completedValue);
       const result = await awardXP(user.uid, habit.xpReward);
       await updateStreak(user.uid);
 
@@ -153,6 +156,8 @@ export default function DashboardScreen({ navigation, route }) {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#9b1c1c" />
       }
       showActionGrid={false}
+      showCharacter={true}
+      showEncouragement={false}
       overlays={<>{xpPopup?.visible && <XPPopup amount={xpPopup.amount} />}</>}
     >
       <View style={styles.streakRow}>
@@ -160,14 +165,14 @@ export default function DashboardScreen({ navigation, route }) {
         <StreakBadge streak={profile?.streak || 0} />
       </View>
 
-      <Avatar stage={profile?.avatarStage || 1} />
+      <Avatar stage={profile?.avatarStage || 1} gender={profile?.gender} />
       <XPBar xp={profile?.xp || 0} />
 
       <WeeklyXPChart userId={user?.uid} />
 
       <Text style={styles.motivation}>{motivation}</Text>
 
-      <Text style={styles.sectionTitle}>Daily Check</Text>
+      <Text style={styles.sectionTitle}>Daily Checks</Text>
       <View style={styles.checkGrid}>
         {DAILY_CHECKS.map((check) => (
           <DailyCheckCard
@@ -177,7 +182,71 @@ export default function DashboardScreen({ navigation, route }) {
             onPress={() => setSelectedCheck(check)}
           />
         ))}
+      </View>
 
+      <Text style={styles.sectionTitle}>My Habits</Text>
+      <View style={styles.checkGrid}>
+        {habits.map((habit) => {
+          const done = !!todayCompletions[habit.habitId];
+          const isExpanded = expandedHabit === habit.id;
+
+          if (isExpanded && !done) {
+            return (
+              <View key={habit.id} style={styles.expandedCard}>
+                <HabitCard
+                  habit={habit}
+                  completedToday={done}
+                  onComplete={async (h, val) => {
+                    await handleComplete(h, val);
+                    setExpandedHabit(null);
+                  }}
+                />
+                <TouchableOpacity
+                  style={styles.collapseBtn}
+                  onPress={() => setExpandedHabit(null)}
+                >
+                  <Text style={styles.collapseBtnText}>Close</Text>
+                </TouchableOpacity>
+              </View>
+            );
+          }
+
+          return (
+            <TouchableOpacity
+              key={habit.id}
+              activeOpacity={done ? 1 : 0.6}
+              style={[styles.gridCard, done && styles.gridCardDone]}
+              onPress={() => {
+                if (done) return;
+                if (habit.isQuantitative) {
+                  setExpandedHabit(habit.id);
+                } else {
+                  handleComplete(habit, null);
+                }
+              }}
+              disabled={done}
+            >
+              <Text style={[styles.gridCardLabel, done && styles.gridCardLabelDone]} numberOfLines={2}>
+                {habit.title}
+              </Text>
+              {done && <Text style={styles.gridCardCheck}>✓</Text>}
+              {!done && <Text style={styles.gridCardXP}>+{habit.xpReward} XP</Text>}
+            </TouchableOpacity>
+          );
+        })}
+
+        <TouchableOpacity
+          activeOpacity={0.6}
+          style={styles.addCard}
+          onPress={() => setShowHabitManager(true)}
+        >
+          <Text style={styles.addCardPlus}>+</Text>
+          <Text style={styles.gridCardLabel}>Add / Modify</Text>
+        </TouchableOpacity>
+      </View>
+
+      <Text style={styles.sectionTitle}>Quick Actions</Text>
+      <View style={styles.checkGrid}>
         <TouchableOpacity
           activeOpacity={0.6}
           style={styles.gridCard}
@@ -196,16 +265,6 @@ export default function DashboardScreen({ navigation, route }) {
           <Text style={styles.gridCardLabel}>Nearby Hospitals</Text>
         </TouchableOpacity>
       </View>
-
-      <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Today's Habits</Text>
-      {habits.map((habit) => (
-        <HabitCard
-          key={habit.id}
-          habit={habit}
-          completedToday={!!todayCompletions[habit.habitId]}
-          onComplete={handleComplete}
-        />
-      ))}
 
       {allDone && (
         <Text style={styles.allDone}>
@@ -238,6 +297,16 @@ export default function DashboardScreen({ navigation, route }) {
         userId={user?.uid}
         onXP={handleTaskXP}
         onClose={() => setShowTasksModal(false)}
+      />
+
+      <HabitManagerModal
+        visible={showHabitManager}
+        activeHabits={habits}
+        userId={user?.uid}
+        onClose={(needsRefresh) => {
+          setShowHabitManager(false);
+          if (needsRefresh) loadData();
+        }}
       />
     </MainLayout>
   );
@@ -289,9 +358,28 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 10,
   },
+  gridCardDone: {
+    borderColor: '#2ecc71',
+    backgroundColor: '#e8f5e9',
+  },
   gridCardIcon: {
     fontSize: 28,
     marginBottom: 6,
+  },
+  gridCardInitial: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#9b1c1c',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  gridCardInitialText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+    fontFamily: 'Jersey20',
   },
   gridCardImage: {
     width: 36,
@@ -304,6 +392,59 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     textAlign: 'center',
+    fontFamily: 'Jersey20',
+  },
+  gridCardLabelDone: {
+    color: '#2ecc71',
+  },
+  gridCardCheck: {
+    color: '#2ecc71',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginTop: 2,
+    fontFamily: 'Jersey20',
+  },
+  gridCardXP: {
+    color: '#9b1c1c',
+    fontSize: 10,
+    fontWeight: '600',
+    marginTop: 2,
+    fontFamily: 'Jersey20',
+  },
+  addCard: {
+    width: '48%',
+    backgroundColor: '#fff8ec',
+    borderRadius: 14,
+    paddingVertical: 16,
+    paddingHorizontal: 10,
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#9b1c1c',
+    borderStyle: 'dashed',
+    minHeight: 90,
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  addCardPlus: {
+    fontSize: 28,
+    color: '#9b1c1c',
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  expandedCard: {
+    width: '100%',
+    marginBottom: 10,
+  },
+  collapseBtn: {
+    alignSelf: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    marginTop: -4,
+    marginBottom: 4,
+  },
+  collapseBtnText: {
+    color: '#8c7a5e',
+    fontSize: 13,
     fontFamily: 'Jersey20',
   },
   allDone: {

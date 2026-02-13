@@ -17,6 +17,7 @@ export default function MainLayout({
   refreshControl,
   showEncouragement = true,
   showActionGrid = true,
+  showCharacter = false,
   overlays,
 }) {
   const { profile } = useUser();
@@ -59,18 +60,19 @@ export default function MainLayout({
 
   return (
     <View style={styles.container}>
+      {hamburger}
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
         refreshControl={refreshControl}
       >
-        {hamburger}
-
         <Text style={styles.title}>{title}</Text>
 
-        <View style={styles.characterStrip}>
-          <Image source={characterImage} style={styles.characterImage} />
-        </View>
+        {showCharacter && (
+          <View style={styles.characterStrip}>
+            <Image source={characterImage} style={styles.characterImage} />
+          </View>
+        )}
 
         {children}
 
@@ -120,10 +122,13 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
   },
   hamburger: {
+    position: 'absolute',
+    top: 56,
+    left: 20,
+    zIndex: 10,
     width: 32,
     height: 24,
     justifyContent: 'space-between',
-    marginBottom: 16,
   },
   hamburgerAbsolute: {
     position: 'absolute',
