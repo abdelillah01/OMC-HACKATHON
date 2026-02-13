@@ -8,7 +8,10 @@
       "Bash(node:*)",
       "Bash(npx expo export:*)",
       "Bash(npx expo start)",
-      "Bash(npx expo install:*)"
+      "Bash(npx expo install:*)",
+      "Bash(npx expo start --clear)",
+      "Bash(dir:*)",
+      "Bash(ls:*)"
     ]
   }
 }
