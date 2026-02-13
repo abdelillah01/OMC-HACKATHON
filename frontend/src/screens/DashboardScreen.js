@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -6,150 +6,57 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
-} from 'react-native';
-import { useAuth } from '../context/AuthContext';
-import { useUser } from '../context/UserContext';
-import { getUserHabits, completeHabit, getTodayCompletions } from '../services/habitService';
-import { awardXP } from '../services/gamificationService';
-import { updateStreak } from '../services/streakService';
-import { getTodayCheck, submitCheck } from '../services/dailyCheckService';
-import { randomPick } from '../utils/helpers';
-import { MOTIVATIONAL_MESSAGES, DAILY_CHECKS } from '../utils/constants';
-import Avatar from '../components/Avatar';
-import XPBar from '../components/XPBar';
-import StreakBadge from '../components/StreakBadge';
-import HabitCard from '../components/HabitCard';
-import CelebrationModal from '../components/CelebrationModal';
-import XPPopup from '../components/XPPopup';
-import WeeklyXPChart from '../components/WeeklyXPChart';
-import DailyCheckCard from '../components/DailyCheckCard';
-import DailyCheckModal from '../components/DailyCheckModal';
-import TasksModal from '../components/TasksModal';
+  Image,
+  Dimensions,
+  ActivityIndicator,
+} from "react-native";
+import { useAuth } from "../context/AuthContext";
+import { useUser } from "../context/UserContext";
+import { getTodayCheck } from "../services/dailyCheckService";
+import { getUserHabits, getTodayCompletions } from "../services/habitService";
+import WeeklyXPChart from "../components/WeeklyXPChart";
+import { DAILY_CHECKS } from "../utils/constants";
 
-export default function DashboardScreen({ navigation, route }) {
+const { width } = Dimensions.get("window");
+
+export default function DashboardScreen({ navigation }) {
   const { user } = useAuth();
   const { profile } = useUser();
-  const [habits, setHabits] = useState([]);
-  const [todayCompletions, setTodayCompletions] = useState({});
   const [refreshing, setRefreshing] = useState(false);
-  const [motivation, setMotivation] = useState('');
-
-  // Celebration / XP popup state
-  const [showCelebration, setShowCelebration] = useState(false);
-  const [newLevel, setNewLevel] = useState(null);
-  const [xpPopup, setXpPopup] = useState(null);
-
-  // Daily checks state
   const [dailyCheckData, setDailyCheckData] = useState(null);
-  const [selectedCheck, setSelectedCheck] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Tasks modal state
-  const [showTasksModal, setShowTasksModal] = useState(false);
-
-  // Open tasks modal when navigated from drawer "Today's Plan"
-  useEffect(() => {
-    if (route.params?.openTasks) {
-      setShowTasksModal(true);
-      navigation.setParams({ openTasks: false });
-    }
-  }, [route.params?.openTasks]);
-
+  // Charger les vraies données depuis Firebase
   const loadData = useCallback(async () => {
     if (!user) return;
     try {
-      const [userHabits, completedMap] = await Promise.all([
-        getUserHabits(user.uid),
-        getTodayCompletions(user.uid),
-      ]);
-      setHabits(userHabits);
-      setTodayCompletions(completedMap);
-    } catch (err) {
-      console.error('Failed to load habits:', err);
-    }
-    // Load daily checks separately so a failure here doesn't break the screen
-    try {
       const checkData = await getTodayCheck(user.uid);
       setDailyCheckData(checkData);
+      // Ici tu peux aussi charger tes habitudes si besoin
     } catch (err) {
-      console.error('Failed to load daily checks:', err);
-      setDailyCheckData(null);
+      console.error("Erreur chargement données:", err);
+    } finally {
+      setLoading(false);
     }
   }, [user]);
 
   useEffect(() => {
     loadData();
-    setMotivation(randomPick(MOTIVATIONAL_MESSAGES));
   }, [loadData]);
 
   const onRefresh = async () => {
     setRefreshing(true);
     await loadData();
-    setMotivation(randomPick(MOTIVATIONAL_MESSAGES));
     setRefreshing(false);
   };
 
-  const handleComplete = async (habit) => {
-    try {
-      await completeHabit(user.uid, habit.habitId, habit.xpReward);
-      const result = await awardXP(user.uid, habit.xpReward);
-      await updateStreak(user.uid);
-
-      setTodayCompletions((prev) => ({ ...prev, [habit.habitId]: true }));
-
-      setXpPopup({ amount: habit.xpReward, visible: true });
-      setTimeout(() => setXpPopup(null), 2000);
-
-      if (result.leveledUp) {
-        setNewLevel(result.newLevel);
-        setShowCelebration(true);
-      }
-
-      setMotivation(randomPick(MOTIVATIONAL_MESSAGES));
-    } catch (err) {
-      console.error('Completion error:', err);
-    }
-  };
-
-  // Daily check handlers
-  const handleCheckSubmit = async (type, value) => {
-    return await submitCheck(type, value, user.uid);
-  };
-
-  const handleCheckClose = (result) => {
-    setSelectedCheck(null);
-    if (!result) return;
-
-    setDailyCheckData((prev) => ({
-      ...prev,
-      [result.type || selectedCheck?.key]: result.xpAwarded !== undefined,
-    }));
-
-    if (result.xpAwarded > 0) {
-      setXpPopup({ amount: result.xpAwarded, visible: true });
-      setTimeout(() => setXpPopup(null), 2000);
-    }
-
-    if (result.leveledUp) {
-      setNewLevel(result.newLevel);
-      setShowCelebration(true);
-    }
-
-    loadData();
-  };
-
-  // Tasks modal XP handler
-  const handleTaskXP = (result) => {
-    if (result.xpAwarded > 0) {
-      setXpPopup({ amount: result.xpAwarded, visible: true });
-      setTimeout(() => setXpPopup(null), 2000);
-    }
-    if (result.leveledUp) {
-      setNewLevel(result.newLevel);
-      setShowCelebration(true);
-    }
-  };
-
-  const allDone = habits.length > 0 && habits.every((h) => todayCompletions[h.habitId]);
+  if (loading) {
+    return (
+      <View style={[styles.container, { justifyContent: "center" }]}>
+        <ActivityIndicator size="large" color="#283618" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -159,224 +66,187 @@ export default function DashboardScreen({ navigation, route }) {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#e94560"
+            tintColor="#283618"
           />
         }
       >
-        {/* Header */}
-        <View style={styles.header}>
+        {/* HEADER : Hamburger & Badge Notifications */}
+        <View style={styles.topNav}>
           <TouchableOpacity
-            activeOpacity={0.6}
-            style={styles.hamburger}
             onPress={() => navigation.getParent()?.openDrawer()}
           >
             <View style={styles.hamburgerLine} />
             <View style={styles.hamburgerLine} />
             <View style={styles.hamburgerLine} />
           </TouchableOpacity>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.greeting}>
-              Hello, {profile?.name || 'Adventurer'}!
-            </Text>
-            <Text style={styles.level}>Level {profile?.level || 1}</Text>
+          <View style={styles.notifBadge}>
+            <Text style={styles.notifText}>77</Text>
           </View>
-          <StreakBadge streak={profile?.streak || 0} />
         </View>
 
-        {/* Avatar + XP */}
-        <Avatar stage={profile?.avatarStage || 1} />
-        <XPBar xp={profile?.xp || 0} />
+        <Text style={styles.mainTitle}>welcome back!</Text>
 
-        {/* Weekly XP Chart */}
-        <WeeklyXPChart userId={user?.uid} />
-
-        {/* Motivational message */}
-        <Text style={styles.motivation}>{motivation}</Text>
-
-        {/* Daily Check Section */}
-        <Text style={styles.sectionTitle}>Daily Check</Text>
-        <View style={styles.checkGrid}>
-          {DAILY_CHECKS.map((check) => (
-            <DailyCheckCard
-              key={check.key}
-              check={check}
-              answered={dailyCheckData ? dailyCheckData[check.key] : undefined}
-              onPress={() => setSelectedCheck(check)}
-            />
-          ))}
+        {/* SECTION AVATARS (Visuel seulement) */}
+        <View style={styles.avatarRowPlaceholder}>
+          <Text style={{ fontSize: 28 }}>🧑‍🤝‍🧑🧑‍🤝‍🧑🧑‍🤝‍🧑🏰</Text>
+          <View style={styles.rowLine} />
         </View>
 
-        {/* Today's Tasks button */}
-        <TouchableOpacity
-          activeOpacity={0.6}
-          style={styles.tasksBtn}
-          onPress={() => setShowTasksModal(true)}
-        >
-          <Text style={styles.tasksBtnIcon}>📝</Text>
-          <View>
-            <Text style={styles.tasksBtnTitle}>Today's Tasks</Text>
-            <Text style={styles.tasksBtnSub}>Manage your personal to-do list</Text>
+        {/* CARTE DE PROGRESSION HEBDOMADAIRE (Vrai composant Chart) */}
+        <View style={styles.chartCard}>
+          <View style={styles.chartHeader}>
+            <Text style={styles.dateText}>📅 Monday, October 28</Text>
+            <Text style={styles.flowerText}>🌹 2</Text>
           </View>
-        </TouchableOpacity>
+          <Text style={styles.chartTitle}>weekly health progress</Text>
+          <View style={styles.chartWrapper}>
+            <WeeklyXPChart userId={user?.uid} />
+          </View>
+        </View>
 
-        {/* Active Habits */}
-        <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Today's Habits</Text>
-        {habits.map((habit) => (
-          <HabitCard
-            key={habit.id}
-            habit={habit}
-            completedToday={!!todayCompletions[habit.habitId]}
-            onComplete={handleComplete}
+        {/* PERSONNAGE CENTRAL (Utilise trainer.png de ton dossier assets) */}
+        <View style={styles.centerCharacter}>
+          <Image
+            source={require("../../assets/trainer.png")}
+            style={styles.knightImg}
           />
-        ))}
-
-        {allDone && (
-          <Text style={styles.allDone}>
-            All habits done for today — amazing work!
+          <Text style={styles.motivationText}>
+            You're here ! that's already something
           </Text>
-        )}
+        </View>
 
-        {/* History button */}
-        <TouchableOpacity
-          style={styles.historyBtn}
-          onPress={() => navigation.navigate('Progress')}
-        >
-          <Text style={styles.historyBtnText}>View Progress</Text>
-        </TouchableOpacity>
+        {/* GRILLE DYNAMIQUE DES QUESTIONS (Basée sur DAILY_CHECKS) */}
+        <View style={styles.gridContainer}>
+          {DAILY_CHECKS.map((check) => (
+            <TouchableOpacity
+              key={check.key}
+              style={[
+                styles.gridItem,
+                dailyCheckData?.[check.key] && styles.gridItemDone, // Change d'aspect si complété
+              ]}
+              onPress={() => navigation.navigate("DailyCheck", { check })}
+            >
+              <Text style={styles.gridIconText}>{check.icon || "💊"}</Text>
+              <Text style={styles.gridLabelText}>{check.label}</Text>
+            </TouchableOpacity>
+          ))}
 
+          <TouchableOpacity
+            style={styles.gridItemPlus}
+            onPress={() => navigation.navigate("AddHabit")}
+          >
+            <Text style={styles.plusIcon}>+</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
-
-      {/* XP Popup overlay */}
-      {xpPopup?.visible && <XPPopup amount={xpPopup.amount} />}
-
-      {/* Level-up celebration modal */}
-      <CelebrationModal
-        visible={showCelebration}
-        level={newLevel}
-        onClose={() => setShowCelebration(false)}
-      />
-
-      {/* Daily Check modal */}
-      <DailyCheckModal
-        visible={!!selectedCheck}
-        check={selectedCheck}
-        onSubmit={handleCheckSubmit}
-        onClose={handleCheckClose}
-      />
-
-      {/* Tasks modal */}
-      <TasksModal
-        visible={showTasksModal}
-        userId={user?.uid}
-        onXP={handleTaskXP}
-        onClose={() => setShowTasksModal(false)}
-      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#1a1a2e',
-  },
-  scroll: {
-    padding: 20,
-    paddingTop: 50,
-    paddingBottom: 30,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  hamburger: {
-    width: 36,
-    height: 36,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
+  container: { flex: 1, backgroundColor: "#FFF" },
+  scroll: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40 },
+
+  // Header Style Photo
+  topNav: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
   },
   hamburgerLine: {
     width: 22,
-    height: 2.5,
-    backgroundColor: '#eaeaea',
-    borderRadius: 2,
+    height: 2,
+    backgroundColor: "#000",
     marginVertical: 2.5,
   },
-  greeting: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#eaeaea',
+  notifBadge: {
+    backgroundColor: "#2ecc71",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
   },
-  level: {
-    fontSize: 14,
-    color: '#e94560',
-    fontWeight: '600',
-    marginTop: 2,
+  notifText: { color: "#FFF", fontSize: 10, fontWeight: "bold" },
+
+  mainTitle: {
+    fontFamily: "Jersey20",
+    fontSize: 38,
+    textAlign: "center",
+    color: "#000",
+    marginVertical: 10,
   },
-  motivation: {
-    color: '#aaa',
-    fontSize: 14,
-    fontStyle: 'italic',
-    textAlign: 'center',
-    marginBottom: 24,
+
+  // Ligne d'avatars sous le titre
+  avatarRowPlaceholder: { alignItems: "center", marginBottom: 25 },
+  rowLine: {
+    width: "80%",
+    height: 4,
+    backgroundColor: "#fefae0",
+    borderRadius: 2,
+    marginTop: -5,
   },
-  sectionTitle: {
-    color: '#eaeaea',
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 12,
-  },
-  checkGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  tasksBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#16213e',
-    borderRadius: 14,
-    padding: 16,
-    marginTop: 20,
+
+  // Graphique
+  chartCard: {
+    backgroundColor: "#f2f3e8",
+    borderRadius: 20,
+    padding: 15,
     borderWidth: 1,
-    borderColor: '#0f3460',
+    borderColor: "#e0e0e0",
+    elevation: 3,
   },
-  tasksBtnIcon: {
-    fontSize: 28,
-    marginRight: 14,
+  chartHeader: { flexDirection: "row", justifyContent: "space-between" },
+  dateText: { fontSize: 10, color: "#666", fontWeight: "bold" },
+  flowerText: { fontSize: 12 },
+  chartTitle: { fontFamily: "Jersey20", fontSize: 16, marginTop: 5 },
+  chartWrapper: { height: 130, marginTop: 10 },
+
+  // Perso central
+  centerCharacter: { alignItems: "center", marginVertical: 25 },
+  knightImg: { width: 90, height: 110, resizeMode: "contain" },
+  motivationText: {
+    fontFamily: "Jersey20",
+    fontSize: 24,
+    textAlign: "center",
+    marginTop: 10,
   },
-  tasksBtnTitle: {
-    color: '#eaeaea',
-    fontSize: 16,
-    fontWeight: '700',
+
+  // Grille 3 colonnes exactes
+  gridContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
   },
-  tasksBtnSub: {
-    color: '#888',
-    fontSize: 12,
-    marginTop: 2,
-  },
-  allDone: {
-    color: '#2ecc71',
-    fontSize: 15,
-    fontWeight: '600',
-    textAlign: 'center',
-    marginTop: 8,
-    marginBottom: 16,
-  },
-  historyBtn: {
-    backgroundColor: '#16213e',
+  gridItem: {
+    width: (width - 60) / 3,
+    aspectRatio: 0.9,
+    backgroundColor: "#fefae0",
     borderRadius: 12,
-    padding: 14,
-    alignItems: 'center',
-    marginTop: 16,
+    padding: 8,
+    marginBottom: 15,
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 1,
-    borderColor: '#0f3460',
+    borderColor: "#e6e6d0",
   },
-  historyBtnText: {
-    color: '#e94560',
-    fontSize: 16,
-    fontWeight: '600',
+  gridItemDone: { backgroundColor: "#e9edc9", borderColor: "#ccd5ae" }, // Aspect si validé
+  gridItemPlus: {
+    width: (width - 60) / 3,
+    aspectRatio: 0.9,
+    backgroundColor: "#FFF",
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: "#dcdcdc",
+    borderStyle: "dashed",
+    justifyContent: "center",
+    alignItems: "center",
   },
+  gridIconText: { fontSize: 22, marginBottom: 4 },
+  gridLabelText: {
+    fontSize: 8,
+    textAlign: "center",
+    fontWeight: "bold",
+    color: "#000",
+  },
+  plusIcon: { fontSize: 30, color: "#ccc" },
 });
