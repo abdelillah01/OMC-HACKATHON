@@ -9,20 +9,15 @@ import {
 } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
+import MainLayout from '../components/MainLayout';
 
-/**
- * Fetch nearby hospitals — tries Nominatim first, falls back to Overpass.
- */
 const fetchHospitals = async (lat, lon) => {
-  // Try Nominatim
   try {
     const results = await fetchFromNominatim(lat, lon);
     if (results.length > 0) return results;
   } catch (e) {
     console.warn('Nominatim failed, trying Overpass:', e.message);
   }
-
-  // Fallback: Overpass API
   return fetchFromOverpass(lat, lon);
 };
 
@@ -83,7 +78,6 @@ const fetchFromOverpass = async (lat, lon) => {
   }).filter((h) => !isNaN(h.latitude) && !isNaN(h.longitude));
 };
 
-/** Calculate a bounding box around a point (rough, good enough for search) */
 const getBBox = (lat, lon, radiusMeters) => {
   const dLat = radiusMeters / 111320;
   const dLon = radiusMeters / (111320 * Math.cos((lat * Math.PI) / 180));
@@ -141,7 +135,7 @@ export default function HospitalsScreen({ navigation }) {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#e94560" />
+        <ActivityIndicator size="large" color="#9b1c1c" />
         <Text style={styles.loadingText}>Finding hospitals near you...</Text>
       </View>
     );
@@ -160,17 +154,7 @@ export default function HospitalsScreen({ navigation }) {
   }
 
   return (
-    <View style={styles.container}>
-      {/* Back button */}
-      <TouchableOpacity
-        activeOpacity={0.7}
-        style={styles.backBtn}
-        onPress={() => navigation.goBack()}
-      >
-        <Text style={styles.backText}>← Back</Text>
-      </TouchableOpacity>
-
-      {/* Map */}
+    <MainLayout navigation={navigation} noScroll>
       <MapView
         ref={mapRef}
         style={styles.map}
@@ -190,20 +174,18 @@ export default function HospitalsScreen({ navigation }) {
             coordinate={{ latitude: h.latitude, longitude: h.longitude }}
             title={h.name}
             description={h.address}
-            pinColor="#e94560"
+            pinColor="#9b1c1c"
             onPress={() => setSelectedHospital(h)}
           />
         ))}
       </MapView>
 
-      {/* Info bar */}
       <View style={styles.infoBar}>
         <Text style={styles.infoTitle}>
           {hospitals.length} hospital{hospitals.length !== 1 ? 's' : ''} nearby
         </Text>
       </View>
 
-      {/* Selected hospital card */}
       {selectedHospital && (
         <View style={styles.card}>
           <View style={styles.cardHeader}>
@@ -220,40 +202,38 @@ export default function HospitalsScreen({ navigation }) {
           ) : null}
         </View>
       )}
-    </View>
+    </MainLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#1a1a2e',
-  },
   centered: {
     flex: 1,
-    backgroundColor: '#1a1a2e',
+    backgroundColor: '#fff8dc',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 30,
   },
   loadingText: {
-    color: '#aaa',
+    color: '#8c7a5e',
     fontSize: 15,
     marginTop: 16,
+    fontFamily: 'Jersey20',
   },
   errorIcon: {
     fontSize: 48,
     marginBottom: 16,
   },
   errorText: {
-    color: '#eaeaea',
+    color: '#283618',
     fontSize: 16,
     textAlign: 'center',
     marginBottom: 20,
     lineHeight: 22,
+    fontFamily: 'Jersey20',
   },
   retryBtn: {
-    backgroundColor: '#e94560',
+    backgroundColor: '#9b1c1c',
     borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 32,
@@ -262,45 +242,30 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
-  },
-  backBtn: {
-    position: 'absolute',
-    top: 50,
-    left: 20,
-    zIndex: 10,
-    backgroundColor: '#1a1a2e',
-    borderRadius: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderWidth: 1,
-    borderColor: '#0f3460',
-  },
-  backText: {
-    color: '#e94560',
-    fontSize: 15,
-    fontWeight: '600',
+    fontFamily: 'Jersey20',
   },
   map: {
     flex: 1,
   },
   infoBar: {
-    backgroundColor: '#16213e',
+    backgroundColor: '#fff8ec',
     paddingVertical: 12,
     paddingHorizontal: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#0f3460',
+    borderTopWidth: 1.5,
+    borderTopColor: '#8c9b6b',
   },
   infoTitle: {
-    color: '#eaeaea',
+    color: '#283618',
     fontSize: 15,
     fontWeight: '600',
     textAlign: 'center',
+    fontFamily: 'Jersey20',
   },
   card: {
-    backgroundColor: '#16213e',
+    backgroundColor: '#fff8ec',
     padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#0f3460',
+    borderTopWidth: 1.5,
+    borderTopColor: '#8c9b6b',
   },
   cardHeader: {
     flexDirection: 'row',
@@ -311,20 +276,23 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   hospitalName: {
-    color: '#eaeaea',
+    color: '#283618',
     fontSize: 16,
     fontWeight: '700',
     marginBottom: 3,
+    fontFamily: 'Jersey20',
   },
   hospitalAddress: {
-    color: '#888',
+    color: '#8c7a5e',
     fontSize: 13,
     lineHeight: 18,
+    fontFamily: 'Jersey20',
   },
   hospitalDistance: {
-    color: '#888',
+    color: '#8c7a5e',
     fontSize: 12,
     marginTop: 6,
     marginLeft: 40,
+    fontFamily: 'Jersey20',
   },
 });

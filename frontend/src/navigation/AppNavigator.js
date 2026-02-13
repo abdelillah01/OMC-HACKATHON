@@ -19,7 +19,6 @@ import ProgressScreen from '../screens/ProgressScreen';
 import FeedbackScreen from '../screens/FeedbackScreen';
 import FriendsScreen from '../screens/FriendsScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
-import HospitalsScreen from '../screens/HospitalsScreen';
 
 const AuthStack = createNativeStackNavigator();
 const OnboardStack = createNativeStackNavigator();
@@ -34,7 +33,6 @@ const MENU_ITEMS = [
   { label: 'Edit Profile', icon: '✏️', route: 'EditProfile' },
   { label: 'See Your Friends', icon: '👥', route: 'Friends' },
   { label: 'Give Us Your Feedback', icon: '💬', route: 'Feedback' },
-  { label: 'Nearby Hospitals', icon: '🏥', route: 'Hospitals' },
 ];
 
 // ─── Custom Drawer Content ───
@@ -240,7 +238,6 @@ function DrawerNavigator() {
       <Drawer.Screen name="Feedback" component={FeedbackScreen} />
       <Drawer.Screen name="Friends" component={FriendsScreen} />
       <Drawer.Screen name="EditProfile" component={EditProfileScreen} />
-      <Drawer.Screen name="Hospitals" component={HospitalsScreen} />
     </Drawer.Navigator>
   );
 }
