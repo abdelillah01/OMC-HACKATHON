@@ -127,6 +127,32 @@ export const getHabitCompletions = async (userId) => {
 };
 
 /**
+ * Get completions for a user within the last N days.
+ * Returns array of { habitId, completedAt (Date), xpAwarded }.
+ */
+export const getRecentCompletions = async (userId, days = 5) => {
+  const start = new Date();
+  start.setDate(start.getDate() - days);
+  start.setHours(0, 0, 0, 0);
+  const startTs = Timestamp.fromDate(start);
+
+  const q = query(
+    collection(db, 'habitCompletions'),
+    where('userId', '==', userId),
+    where('completedAt', '>=', startTs)
+  );
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((d) => {
+    const data = d.data();
+    return {
+      habitId: data.habitId,
+      completedAt: data.completedAt?.toDate?.() || new Date(),
+      xpAwarded: data.xpAwarded || 0,
+    };
+  });
+};
+
+/**
  * Get today's completions for a user (to restore "Done" state after refresh)
  * Returns a Set of habitIds completed today.
  */

@@ -27,6 +27,8 @@ import DailyCheckCard from '../components/DailyCheckCard';
 import DailyCheckModal from '../components/DailyCheckModal';
 import TasksModal from '../components/TasksModal';
 import HabitManagerModal from '../components/HabitManagerModal';
+import PlanSuggestionModal from '../components/PlanSuggestionModal';
+import { evaluatePlan, applySuggestion, dismissSuggestion } from '../services/willpowerService';
 
 export default function DashboardScreen({ navigation, route }) {
   const { user } = useAuth();
@@ -46,6 +48,9 @@ export default function DashboardScreen({ navigation, route }) {
   const [showTasksModal, setShowTasksModal] = useState(false);
   const [showHabitManager, setShowHabitManager] = useState(false);
   const [expandedHabit, setExpandedHabit] = useState(null);
+
+  const [planSuggestion, setPlanSuggestion] = useState(null);
+  const [showPlanSuggestion, setShowPlanSuggestion] = useState(false);
 
   useEffect(() => {
     if (route.params?.openTasks) {
@@ -104,6 +109,17 @@ export default function DashboardScreen({ navigation, route }) {
       }
 
       setMotivation(randomPick(MOTIVATIONAL_MESSAGES));
+
+      // AI willpower evaluation after each completion
+      try {
+        const suggestion = await evaluatePlan(user.uid);
+        if (suggestion) {
+          setPlanSuggestion(suggestion);
+          setShowPlanSuggestion(true);
+        }
+      } catch (evalErr) {
+        console.log('Willpower eval skipped:', evalErr.message);
+      }
     } catch (err) {
       console.error('Completion error:', err);
     }
@@ -306,6 +322,22 @@ export default function DashboardScreen({ navigation, route }) {
         onClose={(needsRefresh) => {
           setShowHabitManager(false);
           if (needsRefresh) loadData();
+        }}
+      />
+
+      <PlanSuggestionModal
+        visible={showPlanSuggestion}
+        suggestion={planSuggestion}
+        onAccept={async () => {
+          await applySuggestion(user.uid, planSuggestion);
+          setShowPlanSuggestion(false);
+          setPlanSuggestion(null);
+          loadData();
+        }}
+        onDismiss={async () => {
+          await dismissSuggestion(user.uid);
+          setShowPlanSuggestion(false);
+          setPlanSuggestion(null);
         }}
       />
     </MainLayout>
