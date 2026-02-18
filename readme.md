@@ -1,4 +1,4 @@
-# PEXILIS
+# PEXILIS | VITALIS
 
 A gamified health habit tracker mobile app built for Gen Z. Turn healthy habits into an RPG-style adventure with XP, levels, avatar evolution, and an adaptive AI that keeps your plan in sync with your abilities.
 
@@ -79,5 +79,5 @@ frontend/src/
 | Habit XP | `10 + round(difficulty * 0.4)` per completion |
 
 ## Team
-
+FlowStack
 Built for a hackathon.

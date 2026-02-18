@@ -178,10 +178,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 5,
     marginTop: 90,
-    marginLeft: 30, // Un peu réduit pour laisser de la place
+    marginLeft: 110, // Un peu réduit pour laisser de la place
   },
   trainerImage: {
-    width: 234,
+    width: 350,
     height: 265,
   },
   title: {

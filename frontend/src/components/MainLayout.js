@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   View,
   Text,
@@ -6,13 +6,13 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-} from 'react-native';
-import { useUser } from '../context/UserContext';
+} from "react-native";
+import { useUser } from "../context/UserContext";
 
 export default function MainLayout({
   navigation,
   children,
-  title = 'welcome back!',
+  title = "welcome back!",
   noScroll = false,
   refreshControl,
   showEncouragement = true,
@@ -21,9 +21,10 @@ export default function MainLayout({
   overlays,
 }) {
   const { profile } = useUser();
-  const characterImage = profile?.gender === 'female'
-    ? require('../assets/avatars/female-life.png')
-    : require('../assets/avatars/male-life.png');
+  const characterImage =
+    profile?.gender === "female"
+      ? require("../assets/avatars/female-life.png")
+      : require("../assets/avatars/male-life.png");
 
   const openDrawer = () => {
     let nav = navigation;
@@ -114,7 +115,7 @@ export default function MainLayout({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff8dc',
+    backgroundColor: "#ffffff",
   },
   scroll: {
     padding: 24,
@@ -122,40 +123,40 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
   },
   hamburger: {
-    position: 'absolute',
+    position: "absolute",
     top: 56,
     left: 20,
     zIndex: 10,
     width: 32,
     height: 24,
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
   },
   hamburgerAbsolute: {
-    position: 'absolute',
+    position: "absolute",
     top: 56,
     left: 20,
     zIndex: 10,
     width: 32,
     height: 24,
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
   },
   hamburgerLine: {
     width: 28,
     height: 3,
-    backgroundColor: '#8c7a5e',
+    backgroundColor: "#8c7a5e",
     borderRadius: 2,
   },
   title: {
     fontSize: 26,
-    fontWeight: 'bold',
-    color: '#283618',
-    textAlign: 'center',
+    fontWeight: "bold",
+    color: "#283618",
+    textAlign: "center",
     marginBottom: 12,
-    fontFamily: 'Jersey20',
+    fontFamily: "Jersey20",
   },
   characterStrip: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     marginBottom: 0,
   },
   characterEmoji: {
@@ -164,12 +165,12 @@ const styles = StyleSheet.create({
   characterImage: {
     width: 400,
     height: 400,
-    resizeMode: 'contain',
+    resizeMode: "contain",
     marginTop: -100,
     marginBottom: -140,
   },
   encouragement: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 24,
     marginBottom: 16,
   },
@@ -179,37 +180,37 @@ const styles = StyleSheet.create({
   },
   encourageText: {
     fontSize: 15,
-    color: '#8c7a5e',
-    textAlign: 'center',
-    fontFamily: 'Jersey20',
-    fontStyle: 'italic',
+    color: "#8c7a5e",
+    textAlign: "center",
+    fontFamily: "Jersey20",
+    fontStyle: "italic",
   },
   actionGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
     marginTop: 8,
   },
   actionCard: {
-    width: '48%',
+    width: "48%",
     aspectRatio: 1,
-    backgroundColor: '#fff8ec',
+    backgroundColor: "#fff8ec",
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: '#8c9b6b',
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderColor: "#8c9b6b",
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 12,
   },
   actionEmoji: {
     fontSize: 32,
     marginBottom: 8,
-    fontFamily: 'Jersey20',
+    fontFamily: "Jersey20",
   },
   actionLabel: {
     fontSize: 14,
-    color: '#283618',
-    fontWeight: '600',
-    fontFamily: 'Jersey20',
+    color: "#283618",
+    fontWeight: "600",
+    fontFamily: "Jersey20",
   },
 });

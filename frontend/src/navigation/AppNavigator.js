@@ -1,25 +1,34 @@
-import React from 'react';
-import { ActivityIndicator, View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import React from "react";
+import {
+  ActivityIndicator,
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+} from "react-native";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+
 import {
   createDrawerNavigator,
   DrawerContentScrollView,
-} from '@react-navigation/drawer';
-import { useAuth } from '../context/AuthContext';
-import { useUser } from '../context/UserContext';
+} from "@react-navigation/drawer";
+import { useAuth } from "../context/AuthContext";
+import { useUser } from "../context/UserContext";
 
 // Screens
-import LoginScreen from '../screens/LoginScreen';
-import SignupScreen from '../screens/SignupScreen';
-import OnboardingScreen from '../screens/OnboardingScreen';
-import DashboardScreen from '../screens/DashboardScreen';
-import ProgressScreen from '../screens/ProgressScreen';
-import FeedbackScreen from '../screens/FeedbackScreen';
-import FriendsScreen from '../screens/FriendsScreen';
-import EditProfileScreen from '../screens/EditProfileScreen';
-import HospitalsScreen from '../screens/HospitalsScreen';
+import WelcomeScreen from "../screens/welcomescreen";
+import LoginScreen from "../screens/LoginScreen";
+import SignupScreen from "../screens/SignupScreen";
+import OnboardingScreen from "../screens/OnboardingScreen";
+import DashboardScreen from "../screens/DashboardScreen";
+import ProgressScreen from "../screens/ProgressScreen";
+import FeedbackScreen from "../screens/FeedbackScreen";
+import FriendsScreen from "../screens/FriendsScreen";
+import EditProfileScreen from "../screens/EditProfileScreen";
+import HospitalsScreen from "../screens/HospitalsScreen";
 
 const AuthStack = createNativeStackNavigator();
 const OnboardStack = createNativeStackNavigator();
@@ -28,13 +37,19 @@ const Drawer = createDrawerNavigator();
 
 // ─── Menu items config ───
 const MENU_ITEMS = [
-  { label: 'Home Page', icon: '', route: 'HomeTabs', screen: 'Dashboard' },
-  { label: 'View Progress', icon: '', route: 'HomeTabs', screen: 'Progress' },
-  { label: 'Today\'s Plan', icon: '', route: 'HomeTabs', screen: 'Dashboard', params: { openTasks: true } },
-  { label: 'Edit Profile', icon: '', route: 'EditProfile' },
-  { label: 'Leaderboard', icon: '', route: 'Friends' },
-  { label: 'Give Us Your Feedback', icon: '', route: 'Feedback' },
-  { label: 'Nearby Hospitals', icon: '', route: 'Hospitals' },
+  { label: "Home Page", icon: "", route: "HomeTabs", screen: "Dashboard" },
+  { label: "View Progress", icon: "", route: "HomeTabs", screen: "Progress" },
+  {
+    label: "Today's Plan",
+    icon: "",
+    route: "HomeTabs",
+    screen: "Dashboard",
+    params: { openTasks: true },
+  },
+  { label: "Edit Profile", icon: "", route: "EditProfile" },
+  { label: "Leaderboard", icon: "", route: "Friends" },
+  { label: "Give Us Your Feedback", icon: "", route: "Feedback" },
+  { label: "Nearby Hospitals", icon: "", route: "Hospitals" },
 ];
 
 // ─── Custom Drawer Content ───
@@ -64,15 +79,19 @@ function CustomDrawerContent(props) {
         <View style={drawerStyles.avatarCircle}>
           <Image
             source={
-              profile?.gender === 'female'
-                ? require('../assets/avatars/female_avatar.png')
-                : require('../assets/avatars/male_avatar.png')
+              profile?.gender === "female"
+                ? require("../assets/avatars/female_avatar.png")
+                : require("../assets/avatars/male_avatar.png")
             }
             style={drawerStyles.avatarImage}
           />
         </View>
-        <Text style={drawerStyles.profileName}>{profile?.name || 'Adventurer'}</Text>
-        <Text style={drawerStyles.profileLevel}>Level {profile?.level || 1}</Text>
+        <Text style={drawerStyles.profileName}>
+          {profile?.name || "Adventurer"}
+        </Text>
+        <Text style={drawerStyles.profileLevel}>
+          Level {profile?.level || 1}
+        </Text>
       </View>
 
       <View style={drawerStyles.divider} />
@@ -98,7 +117,9 @@ function CustomDrawerContent(props) {
         style={drawerStyles.menuItem}
         onPress={logOut}
       >
-        <Text style={[drawerStyles.menuLabel, { color: '#9b1c1c' }]}>Log Out</Text>
+        <Text style={[drawerStyles.menuLabel, { color: "#9b1c1c" }]}>
+          Log Out
+        </Text>
       </TouchableOpacity>
     </DrawerContentScrollView>
   );
@@ -109,7 +130,7 @@ const drawerStyles = StyleSheet.create({
     paddingTop: 20,
   },
   profileSection: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: 20,
     paddingHorizontal: 20,
   },
@@ -117,41 +138,41 @@ const drawerStyles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#fff8ec',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#fff8ec",
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 2,
-    borderColor: '#9b1c1c',
+    borderColor: "#9b1c1c",
     marginBottom: 10,
   },
   avatarImage: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    resizeMode: 'cover',
+    resizeMode: "cover",
   },
   profileName: {
-    color: '#283618',
+    color: "#283618",
     fontSize: 18,
-    fontWeight: '700',
-    fontFamily: 'Jersey20',
+    fontWeight: "700",
+    fontFamily: "Jersey20",
   },
   profileLevel: {
-    color: '#9b1c1c',
+    color: "#9b1c1c",
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: "600",
     marginTop: 2,
-    fontFamily: 'Jersey20',
+    fontFamily: "Jersey20",
   },
   divider: {
     height: 1,
-    backgroundColor: '#c9bda3',
+    backgroundColor: "#c9bda3",
     marginVertical: 12,
     marginHorizontal: 20,
   },
   menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 14,
     paddingHorizontal: 24,
   },
@@ -159,20 +180,24 @@ const drawerStyles = StyleSheet.create({
     fontSize: 20,
     marginRight: 16,
     width: 28,
-    textAlign: 'center',
+    textAlign: "center",
   },
   menuLabel: {
-    color: '#283618',
+    color: "#283618",
     fontSize: 15,
-    fontWeight: '500',
-    fontFamily: 'Jersey20',
+    fontWeight: "500",
+    fontFamily: "Jersey20",
   },
 });
 
 // ─── Auth Navigator ───
 function AuthNavigator() {
   return (
-    <AuthStack.Navigator screenOptions={{ headerShown: false }}>
+    <AuthStack.Navigator
+      initialRouteName="Welcome"
+      screenOptions={{ headerShown: false }}
+    >
+      <AuthStack.Screen name="Welcome" component={WelcomeScreen} />
       <AuthStack.Screen name="Login" component={LoginScreen} />
       <AuthStack.Screen name="Signup" component={SignupScreen} />
     </AuthStack.Navigator>
@@ -195,14 +220,14 @@ function MainTabNavigator() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          display: 'none',
+          display: "none",
         },
-        tabBarActiveTintColor: '#9b1c1c',
-        tabBarInactiveTintColor: '#8c7a5e',
+        tabBarActiveTintColor: "#9b1c1c",
+        tabBarInactiveTintColor: "#8c7a5e",
         tabBarLabelStyle: {
           fontSize: 12,
-          fontWeight: '600',
-          fontFamily: 'Jersey20',
+          fontWeight: "600",
+          fontFamily: "Jersey20",
         },
       }}
     >
@@ -210,7 +235,7 @@ function MainTabNavigator() {
         name="Dashboard"
         component={DashboardScreen}
         options={{
-          tabBarLabel: 'Home',
+          tabBarLabel: "Home",
           tabBarIcon: ({ color, size }) => (
             <Text style={{ fontSize: size, color }}>🏠</Text>
           ),
@@ -220,7 +245,7 @@ function MainTabNavigator() {
         name="Progress"
         component={ProgressScreen}
         options={{
-          tabBarLabel: 'Progress',
+          tabBarLabel: "Progress",
           tabBarIcon: ({ color, size }) => (
             <Text style={{ fontSize: size, color }}>📊</Text>
           ),
@@ -237,10 +262,10 @@ function DrawerNavigator() {
       drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={{
         headerShown: false,
-        drawerType: 'slide',
-        overlayColor: 'rgba(0,0,0,0.6)',
+        drawerType: "slide",
+        overlayColor: "rgba(0,0,0,0.6)",
         drawerStyle: {
-          backgroundColor: '#fff8dc',
+          backgroundColor: "#fff8dc",
           width: 280,
         },
       }}
@@ -261,7 +286,14 @@ export default function AppNavigator() {
 
   if (loading || (user && profileLoading)) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff8dc' }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "#fff8dc",
+        }}
+      >
         <ActivityIndicator size="large" color="#9b1c1c" />
       </View>
     );

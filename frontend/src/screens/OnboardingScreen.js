@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -7,21 +7,20 @@ import {
   ScrollView,
   ActivityIndicator,
   Image,
-} from 'react-native';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '../firebase/config';
-import { useAuth } from '../context/AuthContext';
-import {
-  GENDERS,
-  HEALTH_GOALS,
-  COMMITMENT_LEVELS,
-} from '../utils/constants';
+  ImageBackground,
+  Dimensions,
+} from "react-native";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "../firebase/config";
+import { useAuth } from "../context/AuthContext";
+import { GENDERS, HEALTH_GOALS, COMMITMENT_LEVELS } from "../utils/constants";
 import {
   activateHabits,
   seedHabitTemplates,
   getRecommendedHabits,
-} from '../services/habitService';
+} from "../services/habitService";
 
+const { width, height } = Dimensions.get("window");
 const TOTAL_STEPS = 4;
 
 export default function OnboardingScreen() {
@@ -32,9 +31,8 @@ export default function OnboardingScreen() {
   const [commitmentLevel, setCommitmentLevel] = useState(null);
   const [selectedHabits, setSelectedHabits] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
-  // Step 4: filter habits by goals + commitment level
   const filteredHabits = useMemo(() => {
     if (selectedGoals.length === 0 || !commitmentLevel) return [];
     return getRecommendedHabits(selectedGoals, commitmentLevel);
@@ -58,22 +56,22 @@ export default function OnboardingScreen() {
   };
 
   const handleNext = () => {
-    setError('');
+    setError("");
     if (step === 0) {
       if (!gender) {
-        setError('Please select your gender.');
+        setError("Please select your gender.");
         return;
       }
       setStep(1);
     } else if (step === 1) {
       if (selectedGoals.length === 0) {
-        setError('Please select at least one goal.');
+        setError("Please select at least one goal.");
         return;
       }
       setStep(2);
     } else if (step === 2) {
       if (!commitmentLevel) {
-        setError('Please select your commitment level.');
+        setError("Please select your commitment level.");
         return;
       }
       setSelectedHabits([]);
@@ -82,7 +80,7 @@ export default function OnboardingScreen() {
   };
 
   const handleBack = () => {
-    setError('');
+    setError("");
     if (step === 1) setStep(0);
     else if (step === 2) setStep(1);
     else if (step === 3) setStep(2);
@@ -90,22 +88,17 @@ export default function OnboardingScreen() {
 
   const handleFinish = async () => {
     if (selectedHabits.length === 0 || selectedHabits.length > 4) {
-      setError('Please select 1 to 4 habits.');
+      setError("Please select 1 to 4 habits.");
       return;
     }
-    setError('');
     setLoading(true);
     try {
       await seedHabitTemplates();
       await activateHabits(user.uid, selectedHabits);
-
-      await updateDoc(doc(db, 'users', user.uid), {
+      await updateDoc(doc(db, "users", user.uid), {
         gender,
         selectedGoals,
         commitmentLevel,
-        // Legacy fields for backward compatibility
-        healthGoal: selectedGoals[0] || '',
-        selectedInterests: selectedGoals,
         onboardingComplete: true,
       });
     } catch (err) {
@@ -117,481 +110,279 @@ export default function OnboardingScreen() {
 
   const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
-  // ─── Step 1: Gender Selection ───
+  // Layout commun pour les boutons "Next" de style pilule 3D
+  const NextButton = ({
+    onPress,
+    disabled,
+    label = "Next",
+    loading = false,
+  }) => (
+    <TouchableOpacity
+      style={[styles.pixelButtonShadow, disabled && styles.buttonDisabled]}
+      onPress={onPress}
+      disabled={disabled || loading}
+    >
+      <View style={styles.buttonInner}>
+        {loading ? (
+          <ActivityIndicator color="#FFF" />
+        ) : (
+          <Text style={styles.buttonText}>{label}</Text>
+        )}
+      </View>
+    </TouchableOpacity>
+  );
+
+  // ─── Step 1: Gender Selection (Style Gender.png) ───
   if (step === 0) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.stepLabel}>Step 1 of {TOTAL_STEPS}</Text>
-        <Text style={styles.title}>Who are you?</Text>
-        <Text style={styles.subtitle}>Select your gender</Text>
+      <View style={styles.whiteContainer}>
+        <Text style={styles.pixelTitleBlack}>
+          Which gender do you{"\n"}identify as?
+        </Text>
 
-        {error ? <Text style={styles.error}>{error}</Text> : null}
-
-        <View style={styles.genderRow}>
-          {GENDERS.map((g) => {
-            const active = gender === g;
-            return (
-              <TouchableOpacity
-                key={g}
-                style={[styles.genderCard, active && styles.genderCardActive]}
-                onPress={() => setGender(g)}
+        <View style={styles.genderContainer}>
+          {GENDERS.map((g) => (
+            <TouchableOpacity
+              key={g}
+              style={styles.genderItem}
+              onPress={() => setGender(g)}
+            >
+              <View
+                style={[
+                  styles.avatarCircle,
+                  gender === g && styles.avatarCircleActive,
+                ]}
               >
                 <Image
                   source={
-                    g === 'male'
-                      ? require('../assets/avatars/male_avatar.png')
-                      : require('../assets/avatars/female_avatar.png')
+                    g === "male"
+                      ? require("../assets/avatars/male_avatar.png")
+                      : require("../assets/avatars/female_avatar.png")
                   }
-                  style={styles.genderImage}
+                  style={styles.avatarImg}
                 />
-                <Text style={[styles.genderLabel, active && styles.genderLabelActive]}>
-                  {capitalize(g)}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+              </View>
+              <Text style={styles.genderLabelText}>{capitalize(g)}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
-        <View style={styles.navRow}>
-          <TouchableOpacity
-            style={[styles.button, styles.soloButton, !gender && styles.buttonDisabled]}
-            onPress={handleNext}
-            disabled={!gender}
-          >
-            <Text style={styles.buttonText}>Next</Text>
-          </TouchableOpacity>
+        <View style={styles.bottomNavSolo}>
+          <NextButton onPress={handleNext} disabled={!gender} />
         </View>
       </View>
     );
   }
 
-  // ─── Step 2: Goal Selection (max 2) ───
-  if (step === 1) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.stepLabel}>Step 2 of {TOTAL_STEPS}</Text>
-        <Text style={styles.title}>What are your goals?</Text>
-        <Text style={styles.subtitle}>
-          Pick up to 2 areas to focus on ({selectedGoals.length}/2)
+  // ─── Steps 2, 3, 4: Questions (Style Frame 36.jpg) ───
+  return (
+    <ImageBackground
+      source={require("../assets/sky-background.png")}
+      style={styles.container}
+      imageStyle={{ top: -height * 0.1 }}
+    >
+      <View style={styles.overlay}>
+        <Text style={styles.stepIndicator}>
+          Step {step + 1} of {TOTAL_STEPS}
         </Text>
 
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+        {/* Bulle de question style Frame 36 */}
+        <View style={styles.questionBubble}>
+          <Text style={styles.questionText}>
+            {step === 1
+              ? "What are your goals?"
+              : step === 2
+                ? "How committed are you?"
+                : "Choose your habits"}
+          </Text>
+        </View>
 
-        <View style={styles.goalList}>
-          {HEALTH_GOALS.map((g) => {
-            const active = selectedGoals.includes(g.id);
-            return (
+        <ScrollView
+          style={styles.scrollList}
+          showsVerticalScrollIndicator={false}
+        >
+          {step === 1 &&
+            HEALTH_GOALS.map((g) => (
               <TouchableOpacity
                 key={g.id}
-                style={[styles.goalCard, active && styles.goalCardActive]}
+                style={[
+                  styles.optionCard,
+                  selectedGoals.includes(g.id) && styles.optionCardActive,
+                ]}
                 onPress={() => toggleGoal(g.id)}
               >
-                <Text style={styles.goalIcon}>{g.icon}</Text>
-                <Text style={[styles.goalText, active && styles.goalTextActive]}>
-                  {g.label}
-                </Text>
-                {active && <Text style={styles.goalCheck}>✓</Text>}
+                <Text style={styles.optionText}>{g.label}</Text>
               </TouchableOpacity>
-            );
-          })}
-        </View>
+            ))}
 
-        <View style={styles.navRow}>
-          <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-            <Text style={styles.backText}>Back</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.button, selectedGoals.length === 0 && styles.buttonDisabled]}
-            onPress={handleNext}
-            disabled={selectedGoals.length === 0}
-          >
-            <Text style={styles.buttonText}>Next</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  }
-
-  // ─── Step 3: Commitment Level ───
-  if (step === 2) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.stepLabel}>Step 3 of {TOTAL_STEPS}</Text>
-        <Text style={styles.title}>How committed are you?</Text>
-        <Text style={styles.subtitle}>Pick your pace — you can always change later</Text>
-
-        {error ? <Text style={styles.error}>{error}</Text> : null}
-
-        <View style={styles.commitList}>
-          {COMMITMENT_LEVELS.map((level) => {
-            const active = commitmentLevel === level.id;
-            return (
+          {step === 2 &&
+            COMMITMENT_LEVELS.map((level) => (
               <TouchableOpacity
                 key={level.id}
-                style={[styles.commitCard, active && styles.commitCardActive]}
+                style={[
+                  styles.optionCard,
+                  commitmentLevel === level.id && styles.optionCardActive,
+                ]}
                 onPress={() => setCommitmentLevel(level.id)}
               >
-                <View style={styles.commitHeader}>
-                  <Text style={[styles.commitLabel, active && styles.commitLabelActive]}>
-                    {level.label}
-                  </Text>
-                  {active && <Text style={styles.commitCheck}>✓</Text>}
-                </View>
-                <Text style={[styles.commitDesc, active && styles.commitDescActive]}>
-                  {level.description}
+                <Text style={styles.optionText}>{level.label}</Text>
+                <Text style={styles.optionSubtext}>{level.description}</Text>
+              </TouchableOpacity>
+            ))}
+
+          {step === 3 &&
+            filteredHabits.map((habit) => (
+              <TouchableOpacity
+                key={habit.id}
+                style={[
+                  styles.optionCard,
+                  selectedHabits.find((h) => h.id === habit.id) &&
+                    styles.optionCardActive,
+                ]}
+                onPress={() => toggleHabit(habit)}
+              >
+                <Text style={styles.optionText}>{habit.title}</Text>
+                <Text style={styles.optionSubtext}>
+                  {habit.category} • {habit.xpReward} XP
                 </Text>
               </TouchableOpacity>
-            );
-          })}
-        </View>
+            ))}
+        </ScrollView>
 
         <View style={styles.navRow}>
-          <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-            <Text style={styles.backText}>Back</Text>
+          <TouchableOpacity onPress={handleBack}>
+            <Text style={styles.backLink}>Back</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.button, !commitmentLevel && styles.buttonDisabled]}
-            onPress={handleNext}
-            disabled={!commitmentLevel}
-          >
-            <Text style={styles.buttonText}>Next</Text>
-          </TouchableOpacity>
+          <NextButton
+            onPress={step === 3 ? handleFinish : handleNext}
+            label={step === 3 ? "Finish" : "Next"}
+            loading={loading}
+          />
         </View>
       </View>
-    );
-  }
-
-  // ─── Step 4: Habit Selection (max 4) ───
-  return (
-    <View style={styles.container}>
-      <Text style={styles.stepLabel}>Step 4 of {TOTAL_STEPS}</Text>
-      <Text style={styles.title}>Choose your habits</Text>
-      <Text style={styles.subtitle}>
-        Pick up to 4 habits to start with ({selectedHabits.length}/4)
-      </Text>
-
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-
-      <ScrollView style={styles.habitList} showsVerticalScrollIndicator={false}>
-        {filteredHabits.map((habit) => {
-          const active = selectedHabits.find((h) => h.id === habit.id);
-          return (
-            <TouchableOpacity
-              key={habit.id}
-              style={[styles.habitCard, active && styles.habitCardActive]}
-              onPress={() => toggleHabit(habit)}
-            >
-              <View style={styles.habitTop}>
-                <Text style={[styles.habitTitle, active && styles.habitTitleActive]}>
-                  {habit.title}
-                </Text>
-                {active && <Text style={styles.habitCheck}>✓</Text>}
-              </View>
-              <View style={styles.habitMeta}>
-                <Text style={styles.habitCategory}>{habit.category}</Text>
-                <Text style={styles.habitDifficulty}>Difficulty: {habit.difficulty}</Text>
-                <Text style={styles.habitXP}>+{habit.xpReward} XP</Text>
-              </View>
-              {habit.isQuantitative && habit.targetValue && (
-                <Text style={styles.habitTarget}>
-                  Target: {habit.targetValue} {habit.unit}
-                </Text>
-              )}
-            </TouchableOpacity>
-          );
-        })}
-        {filteredHabits.length === 0 && (
-          <Text style={styles.emptyText}>
-            No habits match your goals and commitment level. Try going back and adjusting.
-          </Text>
-        )}
-      </ScrollView>
-
-      <View style={styles.navRow}>
-        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-          <Text style={styles.backText}>Back</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.button, selectedHabits.length === 0 && styles.buttonDisabled]}
-          onPress={handleFinish}
-          disabled={loading || selectedHabits.length === 0}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Start Quest</Text>
-          )}
-        </TouchableOpacity>
-      </View>
-    </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  // Containers
+  whiteContainer: {
     flex: 1,
-    backgroundColor: '#fff8dc',
-    paddingHorizontal: 24,
-    paddingTop: 60,
+    backgroundColor: "#FFF",
+    alignItems: "center",
+    paddingTop: 80,
   },
-  stepLabel: {
-    color: '#9b1c1c',
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 8,
-    fontFamily: 'Jersey20',
+  container: { flex: 1 },
+  overlay: { flex: 1, paddingHorizontal: 25, paddingTop: 60 },
+
+  // Typography
+  pixelTitleBlack: {
+    fontFamily: "PressStart2P",
+    fontSize: 22,
+    color: "#000",
+    textAlign: "center",
+    lineHeight: 35,
+    marginBottom: 40,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#283618',
-    marginBottom: 6,
-    fontFamily: 'Jersey20',
-  },
-  subtitle: {
-    fontSize: 15,
-    color: '#8c7a5e',
-    marginBottom: 24,
-    fontFamily: 'Jersey20',
-  },
-  error: {
-    color: '#ff6b6b',
-    marginBottom: 12,
-    fontSize: 14,
-    fontFamily: 'Jersey20',
-  },
-  emptyText: {
-    color: '#8c7a5e',
-    fontSize: 14,
-    textAlign: 'center',
-    marginTop: 40,
-    fontFamily: 'Jersey20',
+  stepIndicator: {
+    fontFamily: "Jersey20",
+    fontSize: 18,
+    color: "#283618",
+    textAlign: "center",
+    marginBottom: 10,
   },
 
-  // Buttons
-  button: {
-    backgroundColor: '#9b1c1c',
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    alignItems: 'center',
-    flex: 1,
-    marginLeft: 8,
-  },
-  soloButton: {
-    marginLeft: 0,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 17,
-    fontWeight: '600',
-    fontFamily: 'Jersey20',
-  },
-
-  // Navigation row
-  navRow: {
-    flexDirection: 'row',
-    marginTop: 'auto',
-    paddingBottom: 40,
-    paddingTop: 16,
-  },
-  backButton: {
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#8c9b6b',
-  },
-  backText: {
-    color: '#8c7a5e',
-    fontSize: 17,
-    fontWeight: '500',
-    fontFamily: 'Jersey20',
-  },
-
-  // Gender cards
-  genderRow: {
-    flexDirection: 'row',
-    gap: 16,
-  },
-  genderCard: {
-    flex: 1,
-    backgroundColor: '#fff8ec',
-    borderRadius: 16,
-    paddingVertical: 28,
-    alignItems: 'center',
+  // Gender Selection
+  genderContainer: { gap: 30, alignItems: "center" },
+  genderItem: { alignItems: "center" },
+  avatarCircle: {
+    width: 150,
+    height: 150,
+    borderRadius: 75,
     borderWidth: 2,
-    borderColor: '#8c9b6b',
+    borderColor: "#000",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F5F5F5",
   },
-  genderCardActive: {
-    borderColor: '#9b1c1c',
-    backgroundColor: '#fff0d4',
-  },
-  genderImage: {
-    width: 64,
-    height: 64,
-    marginBottom: 10,
-    resizeMode: 'contain',
-  },
-  genderLabel: {
-    color: '#8c7a5e',
-    fontSize: 17,
-    fontWeight: '600',
-    fontFamily: 'Jersey20',
-  },
-  genderLabelActive: {
-    color: '#283618',
+  avatarCircleActive: { backgroundColor: "#e2e2e2", borderWidth: 4 },
+  avatarImg: { width: 110, height: 110, resizeMode: "contain" },
+  genderLabelText: {
+    fontFamily: "PressStart2P",
+    fontSize: 20,
+    marginTop: 15,
+    color: "#000",
   },
 
-  // Goal cards
-  goalList: {
-    gap: 10,
+  // Question Bubble
+  questionBubble: {
+    backgroundColor: "#fdf6e3",
+    padding: 20,
+    borderRadius: 25,
+    borderWidth: 1,
+    borderColor: "#d4c4a8",
+    marginBottom: 25,
+    alignSelf: "center",
+    width: "90%",
   },
-  goalCard: {
-    backgroundColor: '#fff8ec',
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1.5,
-    borderColor: '#8c9b6b',
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  goalCardActive: {
-    borderColor: '#9b1c1c',
-    backgroundColor: '#fff0d4',
-  },
-  goalIcon: {
+  questionText: {
+    fontFamily: "Jersey20",
     fontSize: 24,
-    marginRight: 12,
-  },
-  goalText: {
-    color: '#8c7a5e',
-    fontSize: 16,
-    fontWeight: '600',
-    flex: 1,
-    fontFamily: 'Jersey20',
-  },
-  goalTextActive: {
-    color: '#283618',
-  },
-  goalCheck: {
-    color: '#9b1c1c',
-    fontSize: 18,
-    fontWeight: 'bold',
+    textAlign: "center",
+    color: "#000",
   },
 
-  // Commitment cards
-  commitList: {
-    gap: 10,
+  // Options Cards
+  scrollList: { flex: 1 },
+  optionCard: {
+    backgroundColor: "#fdf6e3",
+    padding: 18,
+    borderRadius: 30,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: "#d4c4a8",
+    alignItems: "center",
   },
-  commitCard: {
-    backgroundColor: '#fff8ec',
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1.5,
-    borderColor: '#8c9b6b',
-  },
-  commitCardActive: {
-    borderColor: '#9b1c1c',
-    backgroundColor: '#fff0d4',
-  },
-  commitHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  commitLabel: {
-    color: '#8c7a5e',
-    fontSize: 17,
-    fontWeight: '700',
-    fontFamily: 'Jersey20',
-  },
-  commitLabelActive: {
-    color: '#283618',
-  },
-  commitCheck: {
-    color: '#9b1c1c',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  commitDesc: {
-    color: '#a89880',
-    fontSize: 13,
-    fontFamily: 'Jersey20',
-  },
-  commitDescActive: {
-    color: '#8c7a5e',
+  optionCardActive: { backgroundColor: "#617143", borderColor: "#3a4528" },
+  optionText: { fontFamily: "Jersey20", fontSize: 22, color: "#000" },
+  optionSubtext: {
+    fontFamily: "Jersey20",
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
   },
 
-  // Habit cards
-  habitList: {
+  // 3D Pixel Button
+  pixelButtonShadow: {
+    width: width * 0.7,
+    height: 65,
+    backgroundColor: "#1b2611",
+    borderRadius: 35,
+    paddingBottom: 7,
+  },
+  buttonInner: {
     flex: 1,
-    marginTop: 4,
+    backgroundColor: "#2d3a1a",
+    borderRadius: 30,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  habitCard: {
-    backgroundColor: '#fff8ec',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 10,
-    borderWidth: 1.5,
-    borderColor: '#8c9b6b',
+  buttonText: { fontFamily: "Jersey20", fontSize: 32, color: "#FFF" },
+  buttonDisabled: { opacity: 0.5 },
+
+  // Navigation
+  bottomNavSolo: { position: "absolute", bottom: 50 },
+  navRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingBottom: 40,
+    gap: 15,
   },
-  habitCardActive: {
-    borderColor: '#9b1c1c',
-    backgroundColor: '#fff0d4',
-  },
-  habitTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  habitTitle: {
-    color: '#555',
-    fontSize: 16,
-    fontWeight: '600',
-    flex: 1,
-    fontFamily: 'Jersey20',
-  },
-  habitTitleActive: {
-    color: '#283618',
-  },
-  habitCheck: {
-    color: '#9b1c1c',
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginLeft: 8,
-  },
-  habitMeta: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  habitCategory: {
-    color: '#8c7a5e',
-    fontSize: 12,
-    fontFamily: 'Jersey20',
-  },
-  habitDifficulty: {
-    color: '#8c7a5e',
-    fontSize: 12,
-    fontFamily: 'Jersey20',
-  },
-  habitXP: {
-    color: '#9b1c1c',
-    fontSize: 12,
-    fontWeight: '600',
-    fontFamily: 'Jersey20',
-  },
-  habitTarget: {
-    color: '#8c7a5e',
-    fontSize: 12,
-    marginTop: 4,
-    fontStyle: 'italic',
-    fontFamily: 'Jersey20',
+  backLink: {
+    fontFamily: "Jersey20",
+    fontSize: 22,
+    color: "#2d3a1a",
+    textDecorationLine: "underline",
   },
 });
