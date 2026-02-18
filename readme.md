@@ -12,19 +12,7 @@ A gamified health habit tracker mobile app built for Gen Z. Turn healthy habits 
 - **Habit management** — Add or remove from 50+ habit templates at any time
 - **To-do list** — Daily task manager with XP rewards
 - **Nearby hospitals** — Map integration for locating healthcare facilities
-- **Friends system** — Social features for accountability
-
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Framework | React Native 0.81 + Expo 54 (managed) |
-| Backend | Firebase 12.9 (Auth + Firestore) |
-| Navigation | React Navigation 7 (native-stack + bottom-tabs) |
-| State | React Context API |
-| Animations | react-native-reanimated |
-
-## Getting Started
+- **Friends system** — Social features for
 
 ```bash
 cd frontend
@@ -53,7 +41,19 @@ The Willpower Engine runs after every habit completion and evaluates whether the
 ```
 frontend/src/
 ├── firebase/config.js          # Firebase initialization
-├── context/                    # AuthProvider + UserProvider
+├── context/                    # AuthProvider + Use accountability
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | React Native 0.81 + Expo 54 (managed) |
+| Backend | Firebase 12.9 (Auth + Firestore) |
+| Navigation | React Navigation 7 (native-stack + bottom-tabs) |
+| State | React Context API |
+| Animations | react-native-reanimated |
+
+## Getting StartedrProvider
 ├── services/
 │   ├── authService.js          # Signup, login, logout
 │   ├── habitService.js         # Habit CRUD, completions, history

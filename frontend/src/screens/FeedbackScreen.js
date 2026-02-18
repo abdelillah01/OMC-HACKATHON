@@ -92,8 +92,9 @@ const styles = StyleSheet.create({
   },
   starsImage: {
     width: 300,
-    height: 250,
+    height: 300,
     resizeMode: 'contain',
+    
   },
   textSection: {
     alignItems: 'center',
